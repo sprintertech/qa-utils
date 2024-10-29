@@ -9,39 +9,61 @@ import {
   createFungibleAssetTransfer,
   FungibleTransferParams,
 } from "@buildwithsygma/evm";
-import { Wallet, providers } from "ethers";
+import { Wallet, providers, ethers } from "ethers";
 import dotenv from "dotenv";
 import Web3HttpProvider from "web3-providers-http";
 import axios from "axios";
 
 dotenv.config();
 
-const fs = require("fs");
-
 interface Domain {
   id: number;
   type: string;
 }
 
-const testDomainIDs: number[] = [2, 5]; // all:  2,  5,  6,  8, 9, 10, 11, 15
+const testSourceDomainIDs: number[] = [6, 11];
+const testDestDomainIDs: number[] = [10];
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000001100",
 ];
-let sharedEVMDomainIDs: number[] = [];
-let sharedConfig: any;
-let evmNetworks: Array<EthereumConfig> = [];
+const privateKey = process.env.PRIVATE_KEY;
+if (!privateKey) {
+  throw new Error("Missing environment variable: PRIVATE_KEY");
+}
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function fetchRemoteFile(path: string): Promise<any> {
+let sharedEVMDomainIDs: number[] = [];
+let evmNetworks: Array<EthereumConfig> = [];
+let sharedEVMFungibleRessIDs: string[] = [];
+
+async function getOverridesForPolygon() {
   try {
-    const response = await axios.get(path);
-    return response.data;
+    const gasResponse = await fetch(
+      "https://gasstation.polygon.technology/amoy"
+    );
+    const { standard } = await gasResponse.json();
+    return {
+      maxFeePerGas: ethers.utils.parseUnits(standard.maxFee.toString(), "gwei"),
+      maxPriorityFeePerGas: ethers.utils.parseUnits(
+        standard.maxPriorityFee.toString(),
+        "gwei"
+      ),
+    };
+  } catch (error) {
+    console.error("Error fetching gas prices:", error);
+    return {};
+  }
+}
+
+async function fetchRemoteFile(path: string) {
+  try {
+    const { data } = await axios.get(path);
+    return data;
   } catch (error) {
     console.error("Error fetching remote file:", error);
     throw error;
   }
 }
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function setup() {
   const environment = process.env.SYGMA_ENV;
@@ -50,39 +72,48 @@ async function setup() {
       ? `https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json`
       : `https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json`;
 
-  // Fetch the shared config from the remote file
-  sharedConfig = await fetchRemoteFile(configPath);
+  const sharedConfig = await fetchRemoteFile(configPath);
 
-  // Extract EVM Domain IDs
   sharedEVMDomainIDs = sharedConfig.domains
     .filter((domain: Domain) => domain.type === "evm")
     .map((domain: Domain) => domain.id);
 
-  // Extract EVM Networks
   evmNetworks = sharedConfig.domains.filter(
     (domain: EthereumConfig) => domain.type === Network.EVM
   ) as Array<EthereumConfig>;
 }
 
-const privateKey = process.env.PRIVATE_KEY;
-if (!privateKey) {
-  throw new Error("Missing environment variable: PRIVATE_KEY");
+function extractUniqueFungibleResourceIds() {
+  const uniqueFungibleResourceIds = new Set(
+    evmNetworks.flatMap((network) =>
+      network.resources
+        .filter((resource) => resource.type === "fungible")
+        .map((resource) => resource.resourceId)
+    )
+  );
+  sharedEVMFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
 }
 
-const getTxExplorerUrl = (params: {
+const getTxExplorerUrl = ({
+  txHash,
+  chainId,
+}: {
   txHash: string;
   chainId: number;
-}): string =>
-  process.env[`SCAN_URL_${params.chainId}`] + `/tx/${params.txHash}`;
+}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
 export async function erc20Transfer(
-  SOURCE_CHAIN_IDs: number[],
-  RESOURCE_IDs: string[]
+  SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
+  RESOURCE_IDs: string[] = sharedEVMFungibleRessIDs,
+  DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
 ): Promise<void> {
+  let transferReport: string[] = [];
+
   for (const network of evmNetworks) {
     if (SOURCE_CHAIN_IDs.includes(network.id)) {
       for (const resouce of network.resources) {
         if (RESOURCE_IDs.includes(resouce.resourceId)) {
+          const sourceRessID = resouce.resourceId;
           const SourceCapID = network.caipId;
           const SourceChainID = network.chainId;
           const amountDecimals = (resouce.decimals as number) - 1;
@@ -93,13 +124,25 @@ export async function erc20Transfer(
           const wallet = new Wallet(privateKey ?? "", ethersWeb3Provider);
           const sourceAddress = await wallet.getAddress();
           const destinationAddress = await wallet.getAddress();
-          for (let network of evmNetworks) {
-            if (SourceCapID !== network.caipId) {
-              for (const resource of network.resources) {
-                if (RESOURCE_IDs.includes(resource.resourceId)) {
+
+          for (let destNetwork of evmNetworks) {
+            if (
+              SourceCapID !== destNetwork.caipId &&
+              DESTINATION_CHAIN_IDs.includes(destNetwork.id)
+            ) {
+              for (const resource of destNetwork.resources) {
+                if (sourceRessID === resource.resourceId) {
+                  console.log(
+                    `Transferring resourceID: ${resource.resourceId} from Source ${SourceChainID} to Destination ${destNetwork.chainId}`
+                  );
+                  const overrides =
+                    SourceChainID === 80002
+                      ? await getOverridesForPolygon()
+                      : {};
+
                   const params: FungibleTransferParams = {
                     source: SourceCapID,
-                    destination: network.caipId,
+                    destination: destNetwork.caipId,
                     sourceNetworkProvider:
                       web3Provider as unknown as Eip1193Provider,
                     resource: resource.resourceId,
@@ -108,10 +151,11 @@ export async function erc20Transfer(
                     sourceAddress: sourceAddress,
                     environment: process.env.SYGMA_ENV as Environment,
                   };
-                  console.log("Params", params);
                   try {
                     const transfer = await createFungibleAssetTransfer(params);
-                    const approvals = await transfer.getApprovalTransactions();
+                    const approvals = await transfer.getApprovalTransactions(
+                      overrides
+                    );
                     console.log(`Approving Tokens (${approvals.length})...`);
 
                     for (const approval of approvals) {
@@ -139,7 +183,9 @@ export async function erc20Transfer(
                         continue;
                       }
                     }
-                    const transferTx = await transfer.getTransferTransaction();
+                    const transferTx = await transfer.getTransferTransaction(
+                      overrides
+                    );
                     const response = await wallet.sendTransaction(transferTx);
                     await response.wait();
                     console.log(
@@ -147,6 +193,9 @@ export async function erc20Transfer(
                         response.hash,
                         process.env.SYGMA_ENV as Environment
                       )}`
+                    );
+                    transferReport.push(
+                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - success`
                     );
                   } catch (transferError) {
                     if (transferError instanceof Error) {
@@ -160,9 +209,12 @@ export async function erc20Transfer(
                         )}`
                       );
                     }
+                    transferReport.push(
+                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`
+                    );
                     continue;
                   }
-                  await wait(10000);
+                  await wait(5000);
                 }
               }
             }
@@ -171,9 +223,12 @@ export async function erc20Transfer(
       }
     }
   }
+  console.log("Transfer Report:");
+  transferReport.forEach((report) => console.log(report));
 }
 
 (async () => {
   await setup();
-  erc20Transfer(testDomainIDs, testResourceIds);
+  extractUniqueFungibleResourceIds();
+  erc20Transfer(testSourceDomainIDs, undefined, undefined);
 })();
