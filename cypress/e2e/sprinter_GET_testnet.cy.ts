@@ -28,6 +28,10 @@ const params = {
 describe('Sprinter API Testing on Testnet for all GET calls', () => {
   const baseUrl = 'https://api.test.sprinter.buildwithsygma.com';
 
+  beforeEach(() => {
+    cy.viewport(1000, 800); 
+  });
+
   it('GET request /health', () => {
     const apiUrl = `${baseUrl}/health`
     cy.api({
@@ -37,12 +41,8 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
 
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
-     
       // Assertions
       expect(response.status).to.eq(200); 
       expect(response.body).to.have.property('status').and.equal('ok'); 
@@ -58,12 +58,8 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
 
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
-     
       // Assertions
       expect(response.status).to.eq(200); 
 
@@ -99,11 +95,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -139,11 +131,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -176,18 +164,13 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
       
     });
   });
-
 
   it('Negative - GET request /accounts/{account}/assets/native with bad account format polkadot format', () => {
       const apiUrl = `${baseUrl}/accounts/5GjowPEaFNnwbrmpPuDmBVdF2e7n3cHwk2LnUwHXsaW5KtEL/assets/native`
@@ -199,11 +182,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
         cy.log(JSON.stringify(response.body));
         cy.log('Response Status:', response.status.toString());
         cy.log('Response Headers:', JSON.stringify(response.headers))
-  
-        const responseBody = JSON.stringify(response.body, null, 2);
-        const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-        cy.log('Response Body:', truncatedBody); 
-        console.log('Full Response Body:', response.body); 
+        cy.log(`x-request-id: ${response.headers['x-request-id']}`)
        
         // Assertions
         expect(response.status).to.eq(400); 
@@ -220,11 +199,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -247,11 +222,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -287,11 +258,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -326,11 +293,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(404); 
@@ -351,11 +314,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -388,11 +347,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -431,11 +386,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 
@@ -477,11 +428,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -490,7 +437,6 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
   
     });
   });
-
   
   it('Negative - GET request /solutions/aggregation - Sepolia to Base with bad token format USDP', () => {
     const queryParams = new URLSearchParams({
@@ -511,11 +457,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -544,11 +486,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(404); 
@@ -577,11 +515,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -610,11 +544,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -643,11 +573,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -676,11 +602,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -710,11 +632,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(400); 
@@ -743,11 +661,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(404); 
@@ -775,11 +689,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
       cy.log('Response Headers:', JSON.stringify(response.headers))
-
-      const responseBody = JSON.stringify(response.body, null, 2);
-      const truncatedBody = responseBody.length > 1000 ? responseBody.substring(0, 1000) + '...' : responseBody;
-      cy.log('Response Body:', truncatedBody); 
-      console.log('Full Response Body:', response.body); 
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
      
       // Assertions
       expect(response.status).to.eq(200); 

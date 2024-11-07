@@ -1,17 +1,16 @@
 import {
+  type Eip1193Provider,
   Environment,
   EthereumConfig,
   Network,
-  getSygmaScanLink,
-  type Eip1193Provider,
 } from "@buildwithsygma/core";
-import {
-  createFungibleAssetTransfer,
-  FungibleTransferParams,
-} from "@buildwithsygma/evm";
-import { Wallet, providers, ethers } from "ethers";
+import { getSygmaScanLink } from "@buildwithsygma/core";
+import { createCrossChainContractCall } from "@buildwithsygma/evm";
 import dotenv from "dotenv";
+import type { BigNumber } from "ethers";
+import { Wallet, ethers, providers } from "ethers";
 import Web3HttpProvider from "web3-providers-http";
+import { sepoliaBaseStorageContract } from "./index";
 import axios from "axios";
 
 dotenv.config();
@@ -21,20 +20,34 @@ interface Domain {
   type: string;
 }
 
-const testSourceDomainIDs: number[] = [6, 11];
+const contractAddresses: Record<number, string> = {
+  11155111: "0x10791B617D2Dad4978Cc18E3A88e422310428430",
+  338: "0x4b17531F07e002Ee2A0714F79d84d9bEcF6b243D",
+  17000: "0x5984CA38b38b43d0A9c94BA5a6D6969E92124a15",
+  421614: "0xD7d5E7d7eaD31E783Df01760FbFad249704Aab14",
+  10200: "0x40e273C40349dCA9062F9a3B80BAdFF000512c1F",
+  84532: "0xF1bFBbE4174E2E6595E095BDF3ac8b97aF7796aA",
+  80002: "0x2d5395aa622DBC7688B2eEeD3E2dC089aE0fd356",
+  1993: "0xF5Ac994A5C402F4f426c2D7319C27912d5DBD7a8",
+};
+
+const MAX_FEE = "350000";
+const testSourceDomainIDs: number[] = [2, 5];
 const testDestDomainIDs: number[] = [10];
 const testResourceIds: string[] = [
-  "0x0000000000000000000000000000000000000000000000000000000000001100",
+  "0x0000000000000000000000000000000000000000000000000000000000000600",
 ];
+const sygmaEnv = process.env.SYGMA_ENV as Environment;
 const privateKey = process.env.PRIVATE_KEY;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 if (!privateKey) {
   throw new Error("Missing environment variable: PRIVATE_KEY");
 }
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
-let sharedEVMFungibleRessIDs: string[] = [];
+let sharedEVMNonFungibleRessIDs: string[] = [];
 
 async function getOverridesForPolygon() {
   try {
@@ -83,15 +96,15 @@ async function setup() {
   ) as Array<EthereumConfig>;
 }
 
-function extractUniqueFungibleResourceIds() {
+function extractUniqueNonFungibleResourceIds() {
   const uniqueFungibleResourceIds = new Set(
     evmNetworks.flatMap((network) =>
       network.resources
-        .filter((resource) => resource.type === "fungible")
+        .filter((resource) => resource.type === "permissionlessGeneric")
         .map((resource) => resource.resourceId)
     )
   );
-  sharedEVMFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
+  sharedEVMNonFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
 }
 
 const getTxExplorerUrl = ({
@@ -102,9 +115,15 @@ const getTxExplorerUrl = ({
   chainId: number;
 }) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
-export async function erc20Transfer(
+function generateUniqueValue() {
+  return ethers.utils.hexlify(
+    ethers.utils.formatBytes32String(Date.now().toString())
+  );
+}
+
+export async function genericMessage(
   SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
-  RESOURCE_IDs: string[] = sharedEVMFungibleRessIDs,
+  RESOURCE_IDs: string[] = sharedEVMNonFungibleRessIDs,
   DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
 ): Promise<void> {
   let transferReport: string[] = [];
@@ -116,7 +135,6 @@ export async function erc20Transfer(
           const sourceRessID = resouce.resourceId;
           const SourceCapID = network.caipId;
           const SourceChainID = network.chainId;
-          const amountDecimals = (resouce.decimals as number) - 1;
           const web3Provider = new Web3HttpProvider(
             process.env[`PROVIDER_URL_${SourceChainID}`]
           );
@@ -135,62 +153,54 @@ export async function erc20Transfer(
                   console.log(
                     `Transferring resourceID: ${resource.resourceId} from Source ${SourceChainID} to Destination ${destNetwork.chainId}`
                   );
+
+                  const valueToBeUpdated = generateUniqueValue();
                   const overrides =
                     SourceChainID === 80002
                       ? await getOverridesForPolygon()
                       : {};
 
-                  const params: FungibleTransferParams = {
-                    source: SourceCapID,
-                    destination: destNetwork.caipId,
-                    sourceNetworkProvider:
-                      web3Provider as unknown as Eip1193Provider,
-                    resource: resource.resourceId,
-                    amount: BigInt(1) * BigInt(10 ** amountDecimals),
-                    recipientAddress: destinationAddress,
-                    sourceAddress: sourceAddress,
-                    environment: process.env.SYGMA_ENV as Environment,
-                  };
                   try {
-                    const transfer = await createFungibleAssetTransfer(params);
-                    const approvals = await transfer.getApprovalTransactions(
-                      overrides
-                    );
-                    console.log(`Approving Tokens (${approvals.length})...`);
+                    const transfer = await createCrossChainContractCall<
+                      typeof sepoliaBaseStorageContract,
+                      "storeWithDepositor"
+                    >({
+                      gasLimit: BigInt(0),
+                      functionParameters: [
+                        sourceAddress,
+                        valueToBeUpdated,
+                        destinationAddress,
+                      ],
+                      functionName: "storeWithDepositor",
+                      destinationContractAbi: sepoliaBaseStorageContract,
+                      destinationContractAddress:
+                        contractAddresses[destNetwork.chainId],
+                      maxFee: BigInt(MAX_FEE),
+                      source: SourceChainID,
+                      destination: destNetwork.chainId,
+                      sourceNetworkProvider:
+                        web3Provider as unknown as Eip1193Provider,
+                      sourceAddress: sourceAddress,
+                      resource: resource.resourceId,
+                      environment: sygmaEnv,
+                    });
 
-                    for (const approval of approvals) {
-                      try {
-                        const response = await wallet.sendTransaction(approval);
-                        await response.wait();
-                        console.log(
-                          `Approved, transaction: ${getTxExplorerUrl({
-                            txHash: response.hash,
-                            chainId: SourceChainID,
-                          })}`
-                        );
-                      } catch (approvalError) {
-                        if (approvalError instanceof Error) {
-                          console.error(
-                            `Error during transfer transaction: ${approvalError.message}`
-                          );
-                        } else {
-                          console.error(
-                            `Unknown error occurred: ${JSON.stringify(
-                              approvalError
-                            )}`
-                          );
-                        }
-                        continue;
-                      }
-                    }
-                    const transferTx = await transfer.getTransferTransaction(
+                    const transaction = await transfer.getTransferTransaction(
                       overrides
                     );
-                    const response = await wallet.sendTransaction(transferTx);
-                    await response.wait();
+                    const tx = await wallet.sendTransaction(transaction);
+                    await tx.wait();
+                    console.log(
+                      `Deposit on source chain, transaction: ${getTxExplorerUrl(
+                        {
+                          txHash: tx.hash,
+                          chainId: SourceChainID,
+                        }
+                      )}`
+                    );
                     console.log(
                       `Depositted, transaction:  ${getSygmaScanLink(
-                        response.hash,
+                        tx.hash,
                         process.env.SYGMA_ENV as Environment
                       )}`
                     );
@@ -229,6 +239,6 @@ export async function erc20Transfer(
 
 (async () => {
   await setup();
-  extractUniqueFungibleResourceIds();
-  erc20Transfer(testSourceDomainIDs, undefined, undefined);
+  extractUniqueNonFungibleResourceIds();
+  genericMessage();
 })();

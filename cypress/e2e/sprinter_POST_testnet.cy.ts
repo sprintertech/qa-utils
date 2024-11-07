@@ -76,6 +76,10 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
   
   });
 
+  beforeEach(() => {
+    cy.viewport(1000, 900); 
+  });
+
   // solution/call tests
 
   it('POST solution/call - Valid response with USDC from Sep to Base using Sprinter contract for claimName method for USDC amount transfer == contract call amount', function () {
@@ -109,6 +113,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -125,7 +130,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
     });
   });
 
-  it ('POST solution/call - Valid response with USDC from Sep to Base using Sprinter contract for claimName method for USDC amount transfer > contract call amount', function () {
+  it('POST solution/call - Valid response with USDC from Sep to Base using Sprinter contract for claimName method for USDC amount transfer > contract call amount', function () {
     const data = {
       account: params.test_wallet_assertions,
       amount: "4000000",
@@ -156,6 +161,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -196,6 +202,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -235,6 +242,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -273,6 +281,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -321,6 +330,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -369,6 +379,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Account' Error:Field validation for 'Account' failed on the 'eth_address' tag"); 
@@ -406,6 +417,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.CallData' Error:Field validation for 'CallData' failed on the 'required' tag"); 
@@ -444,6 +456,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Token' Error:Field validation for 'Token' failed on the 'supported_token' tag"); 
@@ -482,6 +495,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(404);
       expect(response.body).to.have.property('error').equal("No solution found"); 
@@ -520,6 +534,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Failed to convert string into big.int"); 
@@ -558,6 +573,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Failed to convert string into big.int"); 
@@ -596,6 +612,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Destination' Error:Field validation for 'Destination' failed on the 'supported_chain' tag"); 
@@ -634,6 +651,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.WhitelistedSourceChains' Error:Field validation for 'WhitelistedSourceChains' failed on the 'supported_chains' tag"); 
@@ -672,6 +690,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.ContractAddress' Error:Field validation for 'ContractAddress' failed on the 'eth_address' tag"); 
@@ -710,6 +729,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.GasLimit' Error:Field validation for 'GasLimit' failed on the 'required' tag"); 
@@ -830,6 +850,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); 
       expect(response.body).to.have.property('data');
@@ -882,6 +903,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); 
       expect(response.body).to.have.property('data');
@@ -928,6 +950,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode:false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(404); 
       expect(response.body).to.have.property('error').equals("No solution found");
@@ -967,6 +990,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode:false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(404); 
       expect(response.body).to.have.property('error').equals("No solution found");
@@ -1008,6 +1032,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode:false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(404); 
       expect(response.body).to.have.property('error').equals("No solution found");
@@ -1050,6 +1075,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1098,6 +1124,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1146,6 +1173,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1193,6 +1221,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1238,6 +1267,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1283,6 +1313,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       },
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(200); // Validate status code for created resource
       expect(response.body).to.have.property('data');
@@ -1329,6 +1360,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Account' Error:Field validation for 'Account' failed on the 'eth_address' tag"); 
@@ -1368,6 +1400,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Account' Error:Field validation for 'Account' failed on the 'eth_address' tag"); 
@@ -1407,6 +1440,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.CallData' Error:Field validation for 'CallData' failed on the 'required' tag"); 
@@ -1446,6 +1480,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Token' Error:Field validation for 'Token' failed on the 'supported_token' tag"); 
@@ -1485,6 +1520,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(404);
       expect(response.body).to.have.property('error').equal("No solution found"); 
@@ -1524,6 +1560,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Amount' Error:Field validation for 'Amount' failed on the 'big_gt' tag"); 
@@ -1563,6 +1600,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Failed to convert string into big.int"); 
@@ -1602,6 +1640,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Failed to convert string into big.int"); 
@@ -1641,6 +1680,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Destination' Error:Field validation for 'Destination' failed on the 'supported_chain' tag"); 
@@ -1680,6 +1720,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.ContractAddress' Error:Field validation for 'ContractAddress' failed on the 'eth_address' tag"); 
@@ -1719,6 +1760,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.DestContractCall.GasLimit' Error:Field validation for 'GasLimit' failed on the 'required' tag"); 
@@ -1758,6 +1800,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.Type' Error:Field validation for 'Type' failed on the 'oneof' tag"); 
@@ -1796,6 +1839,7 @@ describe('Sprinter API Testing on Testnet for all POST calls', () => {
       failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
       // Assertions
       expect(response.status).to.eq(400);
       expect(response.body).to.have.property('error').equal("Key: 'request.WhitelistedSourceChains' Error:Field validation for 'WhitelistedSourceChains' failed on the 'supported_chains' tag"); 
