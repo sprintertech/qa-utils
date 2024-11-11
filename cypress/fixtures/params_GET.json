@@ -1,0 +1,22 @@
+{
+    "your_wallet": "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
+    "test_wallet_assertions": "0xB99437c5B65e7B65429b368b7cF6A4cFF482C147",
+    "token": "usdc",
+    "sepolia_chainID": 11155111,
+    "sep_USDC_contract": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "sep_SYGMA_WETH_contract": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    "sep_SPRINTER_WETH_contract": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+    "base_chainID": 84532,
+    "base_USDC_contract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "base_WETH_contract": "0x4200000000000000000000000000000000000006",
+    "b3_chainID": 1993,
+    "b3_USDC_contract": "0xE61e5ed4c4f198c5384Ef57E69aAD1eF0c911004",
+    "b3_WETH_contract": "0x3538f4C55893eDca690D1e4Cf9Fb61FB70cd0DD8",
+    "amount_usdc_sepolia": 21987267,
+    "amount_usdc_base": 3878710,
+    "amount_usdc_b3": 5782100,
+    "amount_eth_sepolia": 231551213100000000,
+    "amount_eth_base": 149827210000000000,
+    "amount_eth_b3": 12341200000000000,
+    "threshold": 1
+ }

@@ -9,6 +9,7 @@ const web3js = new Web3(providerURL);
 const abiPath = "src/ABIS/sprinterName.json"; 
 const contractABI = JSON.parse(fs.readFileSync(abiPath, "utf8"));
 const CONTRACT_ADDRESS = '0x3F9A68fF29B3d86a6928C44dF171A984F6180009';
+const destTokenApprovalAddress = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
 const name = "Liviu_TST06";
 const amountClaimed = Number(2000000);
@@ -29,8 +30,10 @@ async function callApi() {
             callData: callData,
             contractAddress: CONTRACT_ADDRESS,
             approvalAddress: CONTRACT_ADDRESS,
-            gasLimit: 420000
+            gasLimit: 420000,
+            outputTokenAddress: destTokenApprovalAddress
         },
+        recipient:account,
         type: "fungible",
         whitelistedSourceChains: [1993]
     };
