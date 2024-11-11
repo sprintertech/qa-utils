@@ -1,16 +1,20 @@
 import {
-  type Eip1193Provider,
-  Environment,
-  EthereumConfig,
+  Config,
   Network,
+  EvmResource,
+  Environment,
+  getSygmaScanLink,
+  EthereumConfig,
+  type Eip1193Provider,
 } from "@buildwithsygma/core";
-import { getSygmaScanLink } from "@buildwithsygma/core";
-import { createCrossChainContractCall } from "@buildwithsygma/evm";
+import {
+  createFungibleAssetTransfer,
+  FungibleTransferParams,
+} from "@buildwithsygma/evm";
 import dotenv from "dotenv";
-import type { BigNumber } from "ethers";
 import { Wallet, ethers, providers } from "ethers";
 import Web3HttpProvider from "web3-providers-http";
-import { sepoliaBaseStorageContract } from "./index";
+import { getContractAddress, getContractInterface } from "./contracts";
 import axios from "axios";
 
 dotenv.config();
@@ -20,53 +24,25 @@ interface Domain {
   type: string;
 }
 
-const contractAddresses: Record<number, string> = {
-  11155111: "0x10791B617D2Dad4978Cc18E3A88e422310428430",
-  338: "0x4b17531F07e002Ee2A0714F79d84d9bEcF6b243D",
-  17000: "0x5984CA38b38b43d0A9c94BA5a6D6969E92124a15",
-  421614: "0xD7d5E7d7eaD31E783Df01760FbFad249704Aab14",
-  10200: "0x40e273C40349dCA9062F9a3B80BAdFF000512c1F",
-  84532: "0xF1bFBbE4174E2E6595E095BDF3ac8b97aF7796aA",
-  80002: "0x2d5395aa622DBC7688B2eEeD3E2dC089aE0fd356",
-  1993: "0xF5Ac994A5C402F4f426c2D7319C27912d5DBD7a8",
-};
+type Contract = "sprinterName" | "storage" | "ERC721Payable";
 
-const MAX_FEE = "350000";
-const testSourceDomainIDs: number[] = [2, 5];
-const testDestDomainIDs: number[] = [10];
-const testResourceIds: string[] = [
-  "0x0000000000000000000000000000000000000000000000000000000000000600",
-];
 const sygmaEnv = process.env.SYGMA_ENV as Environment;
-const privateKey = process.env.PRIVATE_KEY;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+const privateKey = process.env.PRIVATE_KEY;
 if (!privateKey) {
   throw new Error("Missing environment variable: PRIVATE_KEY");
 }
 
+const MAX_FEE = "450000";
+const testSourceDomainIDs: number[] = [2];
+const testDestDomainIDs: number[] = [10];
+const testResourceIds: string[] = [
+  "0x0000000000000000000000000000000000000000000000000000000000001200",
+];
+
 let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
 let sharedEVMNonFungibleRessIDs: string[] = [];
-
-async function getOverridesForPolygon() {
-  try {
-    const gasResponse = await fetch(
-      "https://gasstation.polygon.technology/amoy"
-    );
-    const { standard } = await gasResponse.json();
-    return {
-      maxFeePerGas: ethers.utils.parseUnits(standard.maxFee.toString(), "gwei"),
-      maxPriorityFeePerGas: ethers.utils.parseUnits(
-        standard.maxPriorityFee.toString(),
-        "gwei"
-      ),
-    };
-  } catch (error) {
-    console.error("Error fetching gas prices:", error);
-    return {};
-  }
-}
 
 async function fetchRemoteFile(path: string) {
   try {
@@ -96,17 +72,6 @@ async function setup() {
   ) as Array<EthereumConfig>;
 }
 
-function extractUniqueNonFungibleResourceIds() {
-  const uniqueFungibleResourceIds = new Set(
-    evmNetworks.flatMap((network) =>
-      network.resources
-        .filter((resource) => resource.type === "permissionlessGeneric")
-        .map((resource) => resource.resourceId)
-    )
-  );
-  sharedEVMNonFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
-}
-
 const getTxExplorerUrl = ({
   txHash,
   chainId,
@@ -115,16 +80,48 @@ const getTxExplorerUrl = ({
   chainId: number;
 }) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
-function generateUniqueValue() {
-  return ethers.utils.hexlify(
-    ethers.utils.formatBytes32String(Date.now().toString())
-  );
+let amount: bigint;
+let contract: Contract;
+let nativeValue: bigint;
+let methodName: string;
+let methodArguments: any[];
+
+async function setGMPParameters(
+  resourceID: string,
+  address: string,
+  destChainID: number
+) {
+  if (
+    resourceID ===
+    "0x0000000000000000000000000000000000000000000000000000000000001200"
+  ) {
+    amount = BigInt(1) * BigInt(1e6);
+    contract = "sprinterName";
+    nativeValue = BigInt(0);
+    methodName = "claimName";
+    methodArguments = [`Test${Date.now()}`, address, 900000];
+  } else if (
+    resourceID ===
+    "0x1000000000000000000000000000000000000000000000000000000000000000"
+  ) {
+    amount = BigInt(1) * BigInt(1e15);
+    contract = "ERC721Payable";
+    nativeValue =
+      destChainID === 11155111
+        ? BigInt(1) * BigInt(1e11)
+        : BigInt(1) * BigInt(1e14);
+    methodName = "mintPayable";
+    methodArguments = [address, Date.now(), `Test${Date.now()}`];
+  }
 }
 
-export async function genericMessage(
-  SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
-  RESOURCE_IDs: string[] = sharedEVMNonFungibleRessIDs,
-  DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
+export async function erc20Transfer(
+  SOURCE_CHAIN_IDs: number[] = [2, 10, 15],
+  RESOURCE_IDs: string[] = [
+    "0x0000000000000000000000000000000000000000000000000000000000001200",
+    "0x1000000000000000000000000000000000000000000000000000000000000000",
+  ],
+  DESTINATION_CHAIN_IDs: number[] = [2, 10, 15]
 ): Promise<void> {
   let transferReport: string[] = [];
 
@@ -154,53 +151,77 @@ export async function genericMessage(
                     `Transferring resourceID: ${resource.resourceId} from Source ${SourceChainID} to Destination ${destNetwork.chainId}`
                   );
 
-                  const valueToBeUpdated = generateUniqueValue();
-                  const overrides =
-                    SourceChainID === 80002
-                      ? await getOverridesForPolygon()
-                      : {};
+                  await setGMPParameters(
+                    resource.resourceId,
+                    destinationAddress,
+                    destNetwork.chainId
+                  );
+                  const targetContractAddress = getContractAddress(
+                    destNetwork.chainId,
+                    contract
+                  );
+                  const contractInterface = getContractInterface(contract);
 
-                  try {
-                    const transfer = await createCrossChainContractCall<
-                      typeof sepoliaBaseStorageContract,
-                      "storeWithDepositor"
-                    >({
-                      gasLimit: BigInt(0),
-                      functionParameters: [
-                        sourceAddress,
-                        valueToBeUpdated,
-                        destinationAddress,
+                  const params: FungibleTransferParams = {
+                    source: SourceChainID,
+                    destination: destNetwork.chainId,
+                    sourceNetworkProvider:
+                      web3Provider as unknown as Eip1193Provider,
+                    resource: resource.resourceId,
+                    amount: amount,
+                    recipientAddress: ethers.constants.AddressZero,
+                    sourceAddress: sourceAddress,
+                    optionalGas: BigInt(300_000),
+                    optionalMessage: {
+                      receiver: destinationAddress,
+                      transactionId:
+                        ethers.utils.formatBytes32String("EVM-ERC20+GENERIC"),
+                      actions: [
+                        {
+                          approveTo: targetContractAddress,
+                          tokenSend: (resource as EvmResource).address,
+                          tokenReceive: ethers.constants.AddressZero,
+                          nativeValue: nativeValue,
+                          callTo: targetContractAddress,
+                          data: contractInterface.encodeFunctionData(
+                            methodName,
+                            methodArguments
+                          ),
+                        },
                       ],
-                      functionName: "storeWithDepositor",
-                      destinationContractAbi: sepoliaBaseStorageContract,
-                      destinationContractAddress:
-                        contractAddresses[destNetwork.chainId],
-                      maxFee: BigInt(MAX_FEE),
-                      source: SourceChainID,
-                      destination: destNetwork.chainId,
-                      sourceNetworkProvider:
-                        web3Provider as unknown as Eip1193Provider,
-                      sourceAddress: sourceAddress,
-                      resource: resource.resourceId,
-                      environment: sygmaEnv,
-                    });
+                    },
+                    environment: sygmaEnv
+                  };
+                  try {
+                    const transfer = await createFungibleAssetTransfer(params);
 
-                    const transaction = await transfer.getTransferTransaction(
-                      overrides
-                    );
-                    const tx = await wallet.sendTransaction(transaction);
-                    await tx.wait();
+                    const approvals = await transfer.getApprovalTransactions();
+                    console.log(`Approving Tokens (${approvals.length})...`);
+                    for (const approval of approvals) {
+                      const response = await wallet.sendTransaction(approval);
+                      await response.wait();
+                      console.log(
+                        `Approved, transaction: ${getTxExplorerUrl({
+                          txHash: response.hash,
+                          chainId: SourceChainID,
+                        })}`
+                      );
+                    }
+
+                    const transferTx = await transfer.getTransferTransaction();
+                    const response = await wallet.sendTransaction(transferTx);
+                    await response.wait();
                     console.log(
                       `Deposit on source chain, transaction: ${getTxExplorerUrl(
                         {
-                          txHash: tx.hash,
+                          txHash: response.hash,
                           chainId: SourceChainID,
                         }
                       )}`
                     );
                     console.log(
                       `Depositted, transaction:  ${getSygmaScanLink(
-                        tx.hash,
+                        response.hash,
                         process.env.SYGMA_ENV as Environment
                       )}`
                     );
@@ -239,6 +260,5 @@ export async function genericMessage(
 
 (async () => {
   await setup();
-  extractUniqueNonFungibleResourceIds();
-  genericMessage();
+  erc20Transfer();
 })();

@@ -4,7 +4,7 @@ import { param } from 'cypress/types/jquery';
 import { Web3 } from 'web3';
 import { AbiItem } from 'web3-utils';  // Import AbiItem from web3-utils
 
-require('dotenv').config({ path: 'src/SptrinterAPI/.env' });
+require('dotenv').config({ path: 'src/utils/SptrinterAPI/.env' });
 
 //ERC721 native contrats for test: https://www.notion.so/chainsafe/Native-QA-of-Sprinter-API-9a14395f0ab64910b4f5812f19be43b2#1032103664e8806f8044c0d8df9335fa
 
