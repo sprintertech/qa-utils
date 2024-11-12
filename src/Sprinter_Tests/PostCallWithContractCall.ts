@@ -5,15 +5,27 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 
 dotenv.config();
+
 const abiPathSprinterName = "src/ABIS/sprinterName.json";
 const abiPathERC721Payable = "src/ABIS/ERC721Payable.json";
+const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+const walletPk = process.env.PRIVATE_KEY || '';
+if (!walletPk) {
+  throw new Error("Missing environment variable: PRIVATE_KEY");
+}
+
+let amount: BigInt;
+let approvalAddress: string | undefined;
+let contractAddress: string;
+let outputTokenAddress: string | undefined;
+let callData: string;
 
 const contractAddressesERC721Payable: Record<number, string> = {
   11155111: "0x99eb23BEC48bF56C80889cFbcBF2d491F8aC75fe",
   84532: "0xAf8De6Aa5004E8e323DCC93C683A55e5eE87b9e9",
   1993: "0xAf8De6Aa5004E8e323DCC93C683A55e5eE87b9e9",
 };
-const contractAddressessprinterName: Record<number, string> = {
+const contractAddressesSprinterName: Record<number, string> = {
   84532: "0x3F9A68fF29B3d86a6928C44dF171A984F6180009",
   11155111: "0xf70fb86F700E8Bb7cDf1c20197633518235c3425",
   1993: "0x17e4C404aD634E429ebCdF9a10F38A96Ce8eEF27",
@@ -25,12 +37,6 @@ const usdcAddress: Record<number, string> = {
   1993: "0xE61e5ed4c4f198c5384Ef57E69aAD1eF0c911004",
 };
 
-let amount: BigInt;
-let approvalAddress: string | undefined;
-let contractAddress: string;
-let outputTokenAddress: string | undefined;
-let callData: string;
-
 async function contractCallData(
   chainId: number,
   tokenType: string,
@@ -40,8 +46,8 @@ async function contractCallData(
   const web3js = new Web3(providerURL);
   if (tokenType === "usdc") {
     amount = BigInt(1) * BigInt(1e6);
-    approvalAddress = contractAddressessprinterName[chainId];
-    contractAddress = contractAddressessprinterName[chainId];
+    approvalAddress = contractAddressesSprinterName[chainId];
+    contractAddress = contractAddressesSprinterName[chainId];
     outputTokenAddress = usdcAddress[chainId];
     const contractABIsprinterName = JSON.parse(
       fs.readFileSync(abiPathSprinterName, "utf8")
@@ -73,9 +79,6 @@ async function contractCallData(
       .encodeABI();
   }
 }
-
-const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
-const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
   const destChainId = 11155111;
