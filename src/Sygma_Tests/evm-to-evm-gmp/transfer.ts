@@ -239,5 +239,5 @@ export async function genericMessage(
 (async () => {
   await setup();
   extractUniqueNonFungibleResourceIds();
-  genericMessage(testSourceDomainIDs, undefined, undefined);
+  genericMessage();
 })();
