@@ -21,20 +21,46 @@ interface Domain {
   type: string;
 }
 
-const testSourceDomainIDs: number[] = [6, 11];
-const testDestDomainIDs: number[] = [10];
+interface Resource {
+  type: string;
+  resourceId: string;
+  decimals?: number;
+}
+
+interface TransferResult {
+  success: boolean;
+  message: string;
+  sourceChainId: number;
+  destChainId: number;
+  resourceId: string;
+}
+
+const testSourceDomainIDs: number[] = [2, 6, 11];
+const testDestDomainIDs: number[] = [5, 6,10];
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000001100",
+  "0x0000000000000000000000000000000000000000000000000000000000000300",
+  "0x0000000000000000000000000000000000000000000000000000000000001200"
 ];
-const privateKey = process.env.PRIVATE_KEY;
-if (!privateKey) {
-  throw new Error("Missing environment variable: PRIVATE_KEY");
-}
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
 let sharedEVMFungibleRessIDs: string[] = [];
+
+const privateKey = process.env.PRIVATE_KEY;
+if (!privateKey) {
+  throw new Error("Missing environment variable: PRIVATE_KEY");
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getTxExplorerUrl = ({
+  txHash,
+  chainId,
+}: {
+  txHash: string;
+  chainId: number;
+}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
 async function getOverridesForPolygon() {
   try {
@@ -67,13 +93,10 @@ async function fetchRemoteFile(path: string) {
 
 async function setup() {
   const environment = process.env.SYGMA_ENV;
-  const configPath =
-    environment === "testnet"
-      ? `https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json`
-      : `https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json`;
+  const configPath = `https://chainbridge-assets-${environment === "testnet" ? "stage" : "mainnet"}.s3.us-east-2.amazonaws.com/shared-config-${environment === "testnet" ? "test" : "mainnet"}.json`;
 
   const sharedConfig = await fetchRemoteFile(configPath);
-
+  
   sharedEVMDomainIDs = sharedConfig.domains
     .filter((domain: Domain) => domain.type === "evm")
     .map((domain: Domain) => domain.id);
@@ -94,141 +117,177 @@ function extractUniqueFungibleResourceIds() {
   sharedEVMFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
 }
 
-const getTxExplorerUrl = ({
-  txHash,
-  chainId,
+async function processTransfer({
+  sourceNetwork,
+  destNetwork,
+  resource,
+  wallet,
+  sourceAddress,
+  web3Provider
 }: {
-  txHash: string;
-  chainId: number;
-}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
+  sourceNetwork: EthereumConfig;
+  destNetwork: EthereumConfig;
+  resource: Resource;
+  wallet: Wallet;
+  sourceAddress: string;
+  web3Provider: Web3HttpProvider;
+}): Promise<TransferResult> {
+  const amountDecimals = (resource.decimals as number) - 1;
+
+  console.log(
+    `Transferring resourceID: ${resource.resourceId} from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId}`
+  );
+  const overrides =
+    sourceNetwork.chainId === 80002
+      ? await getOverridesForPolygon()
+      : {};
+
+  const params: FungibleTransferParams = {
+    source: sourceNetwork.caipId,
+    destination: destNetwork.caipId,
+    sourceNetworkProvider:
+      web3Provider as unknown as Eip1193Provider,
+    resource: resource.resourceId,
+    amount: BigInt(1) * BigInt(10 ** amountDecimals),
+    recipientAddress: sourceAddress,
+    sourceAddress: sourceAddress,
+    environment: process.env.SYGMA_ENV as Environment,
+  };
+  try {
+    const transfer = await createFungibleAssetTransfer(params);
+    const approvals = await transfer.getApprovalTransactions(
+      overrides
+    );
+    console.log(`Approving Tokens (${approvals.length})...`);
+
+    for (const approval of approvals) {
+      try {
+        const response = await wallet.sendTransaction(approval);
+        await response.wait();
+        console.log(
+          `Approved, transaction: ${getTxExplorerUrl({
+            txHash: response.hash,
+            chainId: sourceNetwork.chainId,
+          })}`
+        );
+      } catch (approvalError) {
+        if (approvalError instanceof Error) {
+          console.error(
+            `Error during transfer transaction: ${approvalError.message}`
+          );
+        } else {
+          console.error(
+            `Unknown error occurred: ${JSON.stringify(
+              approvalError
+            )}`
+          );
+        }
+        return {
+          success: false,
+          message: `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`,
+          sourceChainId: sourceNetwork.chainId,
+          destChainId: destNetwork.chainId,
+          resourceId: resource.resourceId,
+        };
+      }
+    }
+    const transferTx = await transfer.getTransferTransaction(
+      overrides
+    );
+    const response = await wallet.sendTransaction(transferTx);
+    await response.wait();
+    console.log(
+      `Depositted, transaction:  ${getSygmaScanLink(
+        response.hash,
+        process.env.SYGMA_ENV as Environment
+      )}`
+    );
+    return {
+      success: true,
+      message: `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - success`,
+      sourceChainId: sourceNetwork.chainId,
+      destChainId: destNetwork.chainId,
+      resourceId: resource.resourceId,
+    };
+  } catch (transferError) {
+    if (transferError instanceof Error) {
+      console.error(
+        `Error during transfer transaction: ${transferError.message}`
+      );
+    } else {
+      console.error(
+        `Unknown error occurred: ${JSON.stringify(
+          transferError
+        )}`
+      );
+    }
+    return {
+      success: false,
+      message: `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`,
+      sourceChainId: sourceNetwork.chainId,
+      destChainId: destNetwork.chainId,
+      resourceId: resource.resourceId,
+    };
+  }
+}
 
 export async function erc20Transfer(
   SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
   RESOURCE_IDs: string[] = sharedEVMFungibleRessIDs,
   DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
-): Promise<void> {
-  let transferReport: string[] = [];
+): Promise<TransferResult[]> {
+  const transferResults: TransferResult[] = [];
+  const wallet = new Wallet(privateKey ?? "");
 
-  for (const network of evmNetworks) {
-    if (SOURCE_CHAIN_IDs.includes(network.id)) {
-      for (const resouce of network.resources) {
-        if (RESOURCE_IDs.includes(resouce.resourceId)) {
-          const sourceRessID = resouce.resourceId;
-          const SourceCapID = network.caipId;
-          const SourceChainID = network.chainId;
-          const amountDecimals = (resouce.decimals as number) - 1;
-          const web3Provider = new Web3HttpProvider(
-            process.env[`PROVIDER_URL_${SourceChainID}`]
-          );
-          const ethersWeb3Provider = new providers.Web3Provider(web3Provider);
-          const wallet = new Wallet(privateKey ?? "", ethersWeb3Provider);
-          const sourceAddress = await wallet.getAddress();
-          const destinationAddress = await wallet.getAddress();
+  for (const sourceNetwork of evmNetworks.filter(n => SOURCE_CHAIN_IDs.includes(n.id))) {
+    const eligibleResources = sourceNetwork.resources.filter(r => 
+      RESOURCE_IDs.includes(r.resourceId) && r.type === "fungible"
+    );
 
-          for (let destNetwork of evmNetworks) {
-            if (
-              SourceCapID !== destNetwork.caipId &&
-              DESTINATION_CHAIN_IDs.includes(destNetwork.id)
-            ) {
-              for (const resource of destNetwork.resources) {
-                if (sourceRessID === resource.resourceId) {
-                  console.log(
-                    `Transferring resourceID: ${resource.resourceId} from Source ${SourceChainID} to Destination ${destNetwork.chainId}`
-                  );
-                  const overrides =
-                    SourceChainID === 80002
-                      ? await getOverridesForPolygon()
-                      : {};
+    for (const resource of eligibleResources) {
+      const web3Provider = new Web3HttpProvider(
+        process.env[`PROVIDER_URL_${sourceNetwork.chainId}`]
+      );
+      const ethersWeb3Provider = new providers.Web3Provider(web3Provider);
+      const connectedWallet = wallet.connect(ethersWeb3Provider);
+      
+      const sourceAddress = await connectedWallet.getAddress();
+      
+      // Process transfers for eligible destination networks
+      const destinationNetworks = evmNetworks.filter(n => 
+        DESTINATION_CHAIN_IDs.includes(n.id) && 
+        n.caipId !== sourceNetwork.caipId &&
+        n.resources.some(r => r.resourceId === resource.resourceId && r.type === "fungible")
+      );
 
-                  const params: FungibleTransferParams = {
-                    source: SourceCapID,
-                    destination: destNetwork.caipId,
-                    sourceNetworkProvider:
-                      web3Provider as unknown as Eip1193Provider,
-                    resource: resource.resourceId,
-                    amount: BigInt(1) * BigInt(10 ** amountDecimals),
-                    recipientAddress: destinationAddress,
-                    sourceAddress: sourceAddress,
-                    environment: process.env.SYGMA_ENV as Environment,
-                  };
-                  try {
-                    const transfer = await createFungibleAssetTransfer(params);
-                    const approvals = await transfer.getApprovalTransactions(
-                      overrides
-                    );
-                    console.log(`Approving Tokens (${approvals.length})...`);
-
-                    for (const approval of approvals) {
-                      try {
-                        const response = await wallet.sendTransaction(approval);
-                        await response.wait();
-                        console.log(
-                          `Approved, transaction: ${getTxExplorerUrl({
-                            txHash: response.hash,
-                            chainId: SourceChainID,
-                          })}`
-                        );
-                      } catch (approvalError) {
-                        if (approvalError instanceof Error) {
-                          console.error(
-                            `Error during transfer transaction: ${approvalError.message}`
-                          );
-                        } else {
-                          console.error(
-                            `Unknown error occurred: ${JSON.stringify(
-                              approvalError
-                            )}`
-                          );
-                        }
-                        continue;
-                      }
-                    }
-                    const transferTx = await transfer.getTransferTransaction(
-                      overrides
-                    );
-                    const response = await wallet.sendTransaction(transferTx);
-                    await response.wait();
-                    console.log(
-                      `Depositted, transaction:  ${getSygmaScanLink(
-                        response.hash,
-                        process.env.SYGMA_ENV as Environment
-                      )}`
-                    );
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - success`
-                    );
-                  } catch (transferError) {
-                    if (transferError instanceof Error) {
-                      console.error(
-                        `Error during transfer transaction: ${transferError.message}`
-                      );
-                    } else {
-                      console.error(
-                        `Unknown error occurred: ${JSON.stringify(
-                          transferError
-                        )}`
-                      );
-                    }
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`
-                    );
-                    continue;
-                  }
-                  await wait(3500);
-                }
-              }
-            }
-          }
-        }
+      for (const destNetwork of destinationNetworks) {
+        const result = await processTransfer({
+          sourceNetwork,
+          destNetwork,
+          resource,
+          wallet: connectedWallet,
+          sourceAddress,
+          web3Provider
+        });
+        
+        transferResults.push(result);
+        await wait(3500);
       }
     }
   }
+
+  // Log results
   console.log("Transfer Report:");
-  transferReport.forEach((report) => console.log(report));
+  transferResults.forEach(result => 
+    console.log(`${result.message} - ${result.success ? "success" : "FAILED"}`)
+  );
+
+  return transferResults;
 }
 
+// Main Execution
 (async () => {
   await setup();
   extractUniqueFungibleResourceIds();
-  erc20Transfer(testSourceDomainIDs, undefined, undefined);
+  erc20Transfer(testSourceDomainIDs, testResourceIds, undefined);
 })();
