@@ -111,7 +111,7 @@ Be sure to set account, amount, destination, token, whitelistedSourceChains, thr
 yarn postaCallContract
 ```   
 
-### **Cypress Tests**
+### **Cypress API Tests**
 
 There are several ways to run the Cypress tests in this project:
 
@@ -127,7 +127,7 @@ yarn cypress:run:post
 ```
 For all the Sprinter API calls tests
 ```
-yarn ypress:run:tests 
+yarn cypress:run:tests 
 ```
 
 ### 2. Running Tests in the Cypress Test Runner (GUI)
