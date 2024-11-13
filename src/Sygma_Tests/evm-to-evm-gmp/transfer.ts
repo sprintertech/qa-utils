@@ -19,6 +19,16 @@ interface Domain {
   type: string;
 }
 
+interface TransferParams {
+  sourceChainId: number;
+  destinationChainId: number;
+  resourceId: string;
+  sourceAddress: string;
+  destinationAddress: string;
+  web3Provider: Web3HttpProvider;
+  wallet: Wallet;
+}
+
 const contractAddresses: Record<number, string> = {
   11155111: "0x10791B617D2Dad4978Cc18E3A88e422310428430",
   338: "0x4b17531F07e002Ee2A0714F79d84d9bEcF6b243D",
@@ -31,15 +41,13 @@ const contractAddresses: Record<number, string> = {
 };
 
 const MAX_FEE = "350000";
-const testSourceDomainIDs: number[] = [8];
+const testSourceDomainIDs: number[] = [1];
 const testDestDomainIDs: number[] = [10];
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000000600",
 ];
 const sygmaEnv = process.env.SYGMA_ENV as Environment;
 const privateKey = process.env.PRIVATE_KEY;
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 if (!privateKey) {
   throw new Error("Missing environment variable: PRIVATE_KEY");
 }
@@ -47,6 +55,22 @@ if (!privateKey) {
 let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
 let sharedEVMNonFungibleRessIDs: string[] = [];
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function generateUniqueValue() {
+  return ethers.utils.hexlify(
+    ethers.utils.formatBytes32String(Date.now().toString())
+  );
+}
+
+const getTxExplorerUrl = ({
+  txHash,
+  chainId,
+}: {
+  txHash: string;
+  chainId: number;
+}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
 async function getOverridesForPolygon() {
   try {
@@ -106,18 +130,51 @@ function extractUniqueNonFungibleResourceIds() {
   sharedEVMNonFungibleRessIDs = Array.from(uniqueFungibleResourceIds);
 }
 
-const getTxExplorerUrl = ({
-  txHash,
-  chainId,
-}: {
-  txHash: string;
-  chainId: number;
-}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
+async function executeTransfer(params: TransferParams): Promise<string> {
+  const valueToBeUpdated = generateUniqueValue();
+  const overrides =
+    params.sourceChainId === 80002 ? await getOverridesForPolygon() : {};
 
-function generateUniqueValue() {
-  return ethers.utils.hexlify(
-    ethers.utils.formatBytes32String(Date.now().toString())
+  const transfer = await createCrossChainContractCall<
+    typeof sepoliaBaseStorageContract,
+    "storeWithDepositor"
+  >({
+    gasLimit: BigInt(0),
+    functionParameters: [
+      params.sourceAddress,
+      valueToBeUpdated,
+      params.destinationAddress,
+    ],
+    functionName: "storeWithDepositor",
+    destinationContractAbi: sepoliaBaseStorageContract,
+    destinationContractAddress: contractAddresses[params.destinationChainId],
+    maxFee: BigInt(MAX_FEE),
+    source: params.sourceChainId,
+    destination: params.destinationChainId,
+    sourceNetworkProvider: params.web3Provider as unknown as Eip1193Provider,
+    sourceAddress: params.sourceAddress,
+    resource: params.resourceId,
+    environment: sygmaEnv,
+  });
+
+  const transaction = await transfer.getTransferTransaction(overrides);
+  const tx = await params.wallet.sendTransaction(transaction);
+  await tx.wait();
+
+  console.log(
+    `Deposit on source chain, transaction: ${getTxExplorerUrl({
+      txHash: tx.hash,
+      chainId: params.sourceChainId,
+    })}`
   );
+  console.log(
+    `Depositted, transaction: ${getSygmaScanLink(
+      tx.hash,
+      process.env.SYGMA_ENV as Environment
+    )}`
+  );
+
+  return tx.hash;
 }
 
 export async function genericMessage(
@@ -125,113 +182,72 @@ export async function genericMessage(
   RESOURCE_IDs: string[] = sharedEVMNonFungibleRessIDs,
   DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
 ): Promise<void> {
-  let transferReport: string[] = [];
+  const transferReport: string[] = [];
+  const wallet = new Wallet(privateKey ?? "");
 
-  for (const network of evmNetworks) {
-    if (SOURCE_CHAIN_IDs.includes(network.id)) {
-      for (const resouce of network.resources) {
-        if (RESOURCE_IDs.includes(resouce.resourceId)) {
-          const sourceRessID = resouce.resourceId;
-          const SourceCapID = network.caipId;
-          const SourceChainID = network.chainId;
-          const web3Provider = new Web3HttpProvider(
-            process.env[`PROVIDER_URL_${SourceChainID}`]
+  // Filter source networks based on provided IDs
+  const sourceNetworks = evmNetworks.filter((n) =>
+    SOURCE_CHAIN_IDs.includes(n.id)
+  );
+
+  for (const sourceNetwork of sourceNetworks) {
+    // Filter eligible resources
+    const eligibleResources = sourceNetwork.resources.filter(
+      (r) =>
+        RESOURCE_IDs.includes(r.resourceId) &&
+        r.type === "permissionlessGeneric"
+    );
+
+    for (const sourceResource of eligibleResources) {
+      const web3Provider = new Web3HttpProvider(
+        process.env[`PROVIDER_URL_${sourceNetwork.chainId}`]
+      );
+      const ethersWeb3Provider = new providers.Web3Provider(web3Provider);
+      const connectedWallet = wallet.connect(ethersWeb3Provider);
+      const address = await connectedWallet.getAddress();
+
+      // Filter eligible destination networks
+      const destinationNetworks = evmNetworks.filter(
+        (n) =>
+          DESTINATION_CHAIN_IDs.includes(n.id) &&
+          n.caipId !== sourceNetwork.caipId &&
+          n.resources.some((r) => r.resourceId === sourceResource.resourceId)
+      );
+
+      for (const destNetwork of destinationNetworks) {
+        console.log(
+          `Transferring resourceID: ${sourceResource.resourceId} from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId}`
+        );
+
+        try {
+          await executeTransfer({
+            sourceChainId: sourceNetwork.chainId,
+            destinationChainId: destNetwork.chainId,
+            resourceId: sourceResource.resourceId,
+            sourceAddress: address,
+            destinationAddress: address,
+            web3Provider,
+            wallet: connectedWallet,
+          });
+
+          transferReport.push(
+            `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${sourceResource.resourceId} - success`
           );
-          const ethersWeb3Provider = new providers.Web3Provider(web3Provider);
-          const wallet = new Wallet(privateKey ?? "", ethersWeb3Provider);
-          const sourceAddress = await wallet.getAddress();
-          const destinationAddress = await wallet.getAddress();
-
-          for (let destNetwork of evmNetworks) {
-            if (
-              SourceCapID !== destNetwork.caipId &&
-              DESTINATION_CHAIN_IDs.includes(destNetwork.id)
-            ) {
-              for (const resource of destNetwork.resources) {
-                if (sourceRessID === resource.resourceId) {
-                  console.log(
-                    `Transferring resourceID: ${resource.resourceId} from Source ${SourceChainID} to Destination ${destNetwork.chainId}`
-                  );
-
-                  const valueToBeUpdated = generateUniqueValue();
-                  const overrides =
-                    SourceChainID === 80002
-                      ? await getOverridesForPolygon()
-                      : {};
-
-                  try {
-                    const transfer = await createCrossChainContractCall<
-                      typeof sepoliaBaseStorageContract,
-                      "storeWithDepositor"
-                    >({
-                      gasLimit: BigInt(0),
-                      functionParameters: [
-                        sourceAddress,
-                        valueToBeUpdated,
-                        destinationAddress,
-                      ],
-                      functionName: "storeWithDepositor",
-                      destinationContractAbi: sepoliaBaseStorageContract,
-                      destinationContractAddress:
-                        contractAddresses[destNetwork.chainId],
-                      maxFee: BigInt(MAX_FEE),
-                      source: SourceChainID,
-                      destination: destNetwork.chainId,
-                      sourceNetworkProvider:
-                        web3Provider as unknown as Eip1193Provider,
-                      sourceAddress: sourceAddress,
-                      resource: resource.resourceId,
-                      environment: sygmaEnv,
-                    });
-
-                    const transaction = await transfer.getTransferTransaction(
-                      overrides
-                    );
-                    const tx = await wallet.sendTransaction(transaction);
-                    await tx.wait();
-                    console.log(
-                      `Deposit on source chain, transaction: ${getTxExplorerUrl(
-                        {
-                          txHash: tx.hash,
-                          chainId: SourceChainID,
-                        }
-                      )}`
-                    );
-                    console.log(
-                      `Depositted, transaction:  ${getSygmaScanLink(
-                        tx.hash,
-                        process.env.SYGMA_ENV as Environment
-                      )}`
-                    );
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - success`
-                    );
-                  } catch (transferError) {
-                    if (transferError instanceof Error) {
-                      console.error(
-                        `Error during transfer transaction: ${transferError.message}`
-                      );
-                    } else {
-                      console.error(
-                        `Unknown error occurred: ${JSON.stringify(
-                          transferError
-                        )}`
-                      );
-                    }
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`
-                    );
-                    continue;
-                  }
-                  await wait(3500);
-                }
-              }
-            }
-          }
+        } catch (error) {
+          console.error(
+            "Transfer failed:",
+            error instanceof Error ? error.message : error
+          );
+          transferReport.push(
+            `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${sourceResource.resourceId} - FAILED`
+          );
         }
+
+        await wait(3500);
       }
     }
   }
+
   console.log("Transfer Report:");
   transferReport.forEach((report) => console.log(report));
 }

@@ -15,15 +15,26 @@ Cypress installed either globally or locally within your project
 *Setup*
 
 To get started with running Cypress tests from this repository, follow these steps:
-```
-git clone https://github.com/sygmaprotocol/qa-utils.git
 
-cd qa-utils 
-```
-switch to branch utils
-```
-yarn install
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sygmaprotocol/qa-utils.git
+   ```
+
+2. Navigate to project directory:
+   ```bash
+   cd qa-utils
+   ```
+
+3. Switch to utils branch:
+   ```bash
+   git checkout utils
+   ```
+
+4. Install dependencies:
+   ```bash
+   yarn install
+   ```
 
 *Run Cypress Tests*
 
