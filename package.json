@@ -22,8 +22,13 @@
     "typescript": "^5.6.2"
   },
   "scripts": {
-    "cypress:run:GET": "cypress run --spec cypress/e2e/sprinter_GET_testnet.cy.ts,cypress/e2e/sprinter_POST_testnet.cy.ts",
-    "cypress:run:POST": "cypress run --spec cypress/e2e/sprinter_POST_testnet.cy.ts",
-    "cypress:run:TESTS": "cypress run --spec cypress/e2e/sprinter_GET_testnet.cy.ts,cypress/e2e/sprinter_POST_testnet.cy.ts"
+    "cypress:run:get": "cypress run --spec cypress/e2e/sprinter_GET_testnet.cy.ts,cypress/e2e/sprinter_POST_testnet.cy.ts",
+    "cypress:run:post": "cypress run --spec cypress/e2e/sprinter_POST_testnet.cy.ts",
+    "cypress:run:tests": "cypress run --spec cypress/e2e/sprinter_GET_testnet.cy.ts,cypress/e2e/sprinter_POST_testnet.cy.ts",
+    "transfer:fungible": "ts-node src/Sygma_Tests/evm-to-evm-fungible/transfer.ts",
+    "transfer:gmp": "ts-node src/Sygma_Tests/evm-to-evm-gmp/transfer.ts",
+    "transfer:fungible_and_gmp": "ts-node src/Sygma_Tests/evm-to-evm-fungible_and_gmp/transfer.ts",
+    "postCall": "ts-node src/Sprinter_Tests/PostCallNoContractCall.ts",
+    "postaCallContract": "ts-node src/Sprinter_Tests/PostCallWithContractCall.ts"
   }
 }

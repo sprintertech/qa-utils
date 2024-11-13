@@ -13,6 +13,7 @@ import { Wallet, providers, ethers } from "ethers";
 import dotenv from "dotenv";
 import Web3HttpProvider from "web3-providers-http";
 import axios from "axios";
+import { Command } from 'commander';
 
 dotenv.config();
 
@@ -285,9 +286,59 @@ export async function erc20Transfer(
   return transferResults;
 }
 
-// Main Execution
-(async () => {
-  await setup();
-  extractUniqueFungibleResourceIds();
-  erc20Transfer(testSourceDomainIDs, testResourceIds, undefined);
-})();
+// Add this before the main execution block
+function parseArrayArg(value: string): string[] | number[] {
+  if (!value) return [];
+  const arr = value.split(',').map(item => item.trim());
+  
+  // If the array contains hex strings (starting with 0x), return as strings
+  if (arr.some(item => item.startsWith('0x'))) {
+    return arr;
+  }
+  
+  // Otherwise try to convert to numbers
+  if (arr.every(item => !isNaN(Number(item)))) {
+    return arr.map(Number);
+  }
+  return arr;
+}
+
+if (require.main === module) {
+  const program = new Command();
+
+  program
+    .option('-s, --source <ids>', 'Source chain IDs (comma-separated)', parseArrayArg)
+    .option('-d, --destination <ids>', 'Destination chain IDs (comma-separated)', parseArrayArg)
+    .option('-r, --resources <ids>', 'Resource IDs (comma-separated)', parseArrayArg)
+    .parse(process.argv);
+
+  const options = program.opts();
+
+  (async () => {
+    try {
+      console.log('Starting setup...');
+      await setup();
+      console.log('Setup complete');
+      
+      console.log('Extracting resource IDs...');
+      extractUniqueFungibleResourceIds();
+      console.log('Available resource IDs:', sharedEVMFungibleRessIDs);
+      
+      console.log('Starting transfer with options:', {
+        sourceChains: options.source || 'default',
+        resources: options.resources || 'default',
+        destinationChains: options.destination || 'default'
+      });
+      
+      const results = await erc20Transfer(
+        options.source || undefined,
+        options.resources || undefined,
+        options.destination || undefined
+      );
+      
+      console.log('Transfer complete. Results:', results);
+    } catch (error) {
+      console.error('Error during execution:', error);
+    }
+  })();
+}
