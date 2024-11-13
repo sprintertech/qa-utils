@@ -1,6 +1,6 @@
 # QA Utils
 
-This project contains scripts capable to execute E2E flows on Sygma testnet and mainnet environments, Sprinter API calls with execution and Cypress API tests for Sprinter, specifically testing the GET request functionality in the sprinter_GET_testnet.cy.ts file.
+This project contains scripts capable to execute E2E flows on Sygma testnet and mainnet environments, Sprinter API calls with execution and Cypress API tests for Sprinter - mainly for regression testing.
 
 ### Project Structure
 
@@ -12,12 +12,12 @@ This project contains scripts capable to execute E2E flows on Sygma testnet and 
   - EVM to EVM GMP transfers
   - Combined fungible and GMP transfers
 
-#### Sprinter API Tests with execution 
+#### Sprinter API Calls with execution 
 - Location: `src/Sprinter_API_Tests/`
 - Contains direct API call tests for the Sprinter service
 - Tests various API endpoints and functionality
 
-#### Cypress Tests
+#### Cypress API Tests
 - Location: `cypress/e2e/Sprinter/`
 - API testing suite using Cypress
 - Includes:
