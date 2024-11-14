@@ -103,20 +103,39 @@ async function fetchRemoteFile(path: string) {
 
 async function setup() {
   const environment = process.env.SYGMA_ENV;
-  const configPath =
-    environment === "testnet"
-      ? `https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json`
-      : `https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json`;
+  const defaultPath = 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json';
+  const configPath = {
+    devnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/balance-config-dev.json',
+    testnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json',
+    mainnet: 'https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json'
+  }[environment as string] || defaultPath;
 
-  const sharedConfig = await fetchRemoteFile(configPath);
+  try {
+    const sharedConfig = await fetchRemoteFile(configPath);
+    
+    if (!sharedConfig || !sharedConfig.domains) {
+      throw new Error(`Invalid config received from ${configPath}. Config: ${JSON.stringify(sharedConfig)}`);
+    }
 
-  sharedEVMDomainIDs = sharedConfig.domains
-    .filter((domain: Domain) => domain.type === "evm")
-    .map((domain: Domain) => domain.id);
+    sharedEVMDomainIDs = sharedConfig.domains
+      .filter((domain: Domain) => domain.type === "evm")
+      .map((domain: Domain) => domain.id);
 
-  evmNetworks = sharedConfig.domains.filter(
-    (domain: EthereumConfig) => domain.type === Network.EVM
-  ) as Array<EthereumConfig>;
+    evmNetworks = sharedConfig.domains.filter(
+      (domain: EthereumConfig) => domain.type === Network.EVM
+    ) as Array<EthereumConfig>;
+
+    // Add validation for empty arrays
+    if (sharedEVMDomainIDs.length === 0) {
+      throw new Error('No EVM domains found in config');
+    }
+    if (evmNetworks.length === 0) {
+      throw new Error('No EVM networks found in config');
+    }
+  } catch (error) {
+    console.error('Setup failed:', error);
+    throw error;
+  }
 }
 
 function extractUniqueNonFungibleResourceIds() {
@@ -178,16 +197,16 @@ async function executeTransfer(params: TransferParams): Promise<string> {
 }
 
 export async function genericMessage(
-  SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
+  SOURCE_IDs: number[] = sharedEVMDomainIDs,
   RESOURCE_IDs: string[] = sharedEVMNonFungibleRessIDs,
-  DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
+  DESTINATION_IDs: number[] = sharedEVMDomainIDs
 ): Promise<void> {
   const transferReport: string[] = [];
   const wallet = new Wallet(privateKey ?? "");
 
   // Filter source networks based on provided IDs
   const sourceNetworks = evmNetworks.filter((n) =>
-    SOURCE_CHAIN_IDs.includes(n.id)
+    SOURCE_IDs.includes(n.id)
   );
 
   for (const sourceNetwork of sourceNetworks) {
@@ -209,7 +228,7 @@ export async function genericMessage(
       // Filter eligible destination networks
       const destinationNetworks = evmNetworks.filter(
         (n) =>
-          DESTINATION_CHAIN_IDs.includes(n.id) &&
+          DESTINATION_IDs.includes(n.id) &&
           n.caipId !== sourceNetwork.caipId &&
           n.resources.some((r) => r.resourceId === sourceResource.resourceId)
       );

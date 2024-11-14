@@ -94,17 +94,39 @@ async function fetchRemoteFile(path: string) {
 
 async function setup() {
   const environment = process.env.SYGMA_ENV;
-  const configPath = `https://chainbridge-assets-${environment === "testnet" ? "stage" : "mainnet"}.s3.us-east-2.amazonaws.com/shared-config-${environment === "testnet" ? "test" : "mainnet"}.json`;
+  const defaultPath = 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json';
+  const configPath = {
+    devnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/balance-config-dev.json',
+    testnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json',
+    mainnet: 'https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json'
+  }[environment as string] || defaultPath;
 
-  const sharedConfig = await fetchRemoteFile(configPath);
-  
-  sharedEVMDomainIDs = sharedConfig.domains
-    .filter((domain: Domain) => domain.type === "evm")
-    .map((domain: Domain) => domain.id);
+  try {
+    const sharedConfig = await fetchRemoteFile(configPath);
+    
+    if (!sharedConfig || !sharedConfig.domains) {
+      throw new Error(`Invalid config received from ${configPath}. Config: ${JSON.stringify(sharedConfig)}`);
+    }
 
-  evmNetworks = sharedConfig.domains.filter(
-    (domain: EthereumConfig) => domain.type === Network.EVM
-  ) as Array<EthereumConfig>;
+    sharedEVMDomainIDs = sharedConfig.domains
+      .filter((domain: Domain) => domain.type === "evm")
+      .map((domain: Domain) => domain.id);
+
+    evmNetworks = sharedConfig.domains.filter(
+      (domain: EthereumConfig) => domain.type === Network.EVM
+    ) as Array<EthereumConfig>;
+
+    // Add validation for empty arrays
+    if (sharedEVMDomainIDs.length === 0) {
+      throw new Error('No EVM domains found in config');
+    }
+    if (evmNetworks.length === 0) {
+      throw new Error('No EVM networks found in config');
+    }
+  } catch (error) {
+    console.error('Setup failed:', error);
+    throw error;
+  }
 }
 
 function extractUniqueFungibleResourceIds() {
@@ -232,15 +254,45 @@ async function processTransfer({
   }
 }
 
+function validateInputs(
+  sourceIds: number[],
+  destIds: number[],
+  resourceIds: string[]
+): void {
+  // Validate source domain IDs
+  const invalidSourceIds = sourceIds.filter(id => !sharedEVMDomainIDs.includes(id));
+  if (invalidSourceIds.length > 0) {
+    console.warn(`Warning: Invalid source IDs provided: ${invalidSourceIds.join(', ')}`);
+    console.log(`Available source IDs: ${sharedEVMDomainIDs.join(', ')}`);
+  }
+
+  // Validate destination domain IDs
+  const invalidDestIds = destIds.filter(id => !sharedEVMDomainIDs.includes(id));
+  if (invalidDestIds.length > 0) {
+    console.warn(`Warning: Invalid destination IDs provided: ${invalidDestIds.join(', ')}`);
+    console.log(`Available destination IDs: ${sharedEVMDomainIDs.join(', ')}`);
+  }
+
+  // Validate resource IDs with formatted output
+  const invalidResourceIds = resourceIds.filter(id => !sharedEVMFungibleRessIDs.includes(id));
+  if (invalidResourceIds.length > 0) {
+    console.warn(`Warning: Invalid resource IDs provided: ${invalidResourceIds.join(', ')}`);
+    console.log('Available resource IDs:', sharedEVMFungibleRessIDs);
+  }
+}
+
 export async function erc20Transfer(
-  SOURCE_CHAIN_IDs: number[] = sharedEVMDomainIDs,
+  SOURCE_IDs: number[] = sharedEVMDomainIDs,
   RESOURCE_IDs: string[] = sharedEVMFungibleRessIDs,
-  DESTINATION_CHAIN_IDs: number[] = sharedEVMDomainIDs
+  DESTINATION_IDs: number[] = sharedEVMDomainIDs
 ): Promise<TransferResult[]> {
+  // Add validation at the start of the function
+  validateInputs(SOURCE_IDs, DESTINATION_IDs, RESOURCE_IDs);
+
   const transferResults: TransferResult[] = [];
   const wallet = new Wallet(privateKey ?? "");
 
-  for (const sourceNetwork of evmNetworks.filter(n => SOURCE_CHAIN_IDs.includes(n.id))) {
+  for (const sourceNetwork of evmNetworks.filter(n => SOURCE_IDs.includes(n.id))) {
     const eligibleResources = sourceNetwork.resources.filter(r => 
       RESOURCE_IDs.includes(r.resourceId) && r.type === "fungible"
     );
@@ -256,7 +308,7 @@ export async function erc20Transfer(
       
       // Process transfers for eligible destination networks
       const destinationNetworks = evmNetworks.filter(n => 
-        DESTINATION_CHAIN_IDs.includes(n.id) && 
+        DESTINATION_IDs.includes(n.id) && 
         n.caipId !== sourceNetwork.caipId &&
         n.resources.some(r => r.resourceId === resource.resourceId && r.type === "fungible")
       );
@@ -322,7 +374,7 @@ if (require.main === module) {
       
       console.log('Extracting resource IDs...');
       extractUniqueFungibleResourceIds();
-      console.log('Available resource IDs:', sharedEVMFungibleRessIDs);
+      console.log('Resource IDs extracted.');
       
       console.log('Starting transfer with options:', {
         sourceChains: options.source || 'default',

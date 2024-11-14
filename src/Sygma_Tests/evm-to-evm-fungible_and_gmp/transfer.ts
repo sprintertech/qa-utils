@@ -55,21 +55,41 @@ async function fetchRemoteFile(path: string) {
 }
 
 async function setup() {
-  const environment = process.env.SYGMA_ENV;
-  const configPath =
-    environment === "testnet"
-      ? `https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json`
-      : `https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json`;
+  try {
+    const environment = process.env.SYGMA_ENV;
+    const defaultPath = 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json';
+    const configPath = {
+      devnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/balance-config-dev.json',
+      testnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json',
+      mainnet: 'https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json'
+    }[environment as string] || defaultPath;
 
-  const sharedConfig = await fetchRemoteFile(configPath);
+    const sharedConfig = await fetchRemoteFile(configPath);
+    
+    // Validate config structure
+    if (!sharedConfig || !sharedConfig.domains) {
+      throw new Error(`Invalid config received from ${configPath}. Config: ${JSON.stringify(sharedConfig)}`);
+    }
 
-  sharedEVMDomainIDs = sharedConfig.domains
-    .filter((domain: Domain) => domain.type === "evm")
-    .map((domain: Domain) => domain.id);
+    sharedEVMDomainIDs = sharedConfig.domains
+      .filter((domain: Domain) => domain.type === "evm")
+      .map((domain: Domain) => domain.id);
 
-  evmNetworks = sharedConfig.domains.filter(
-    (domain: EthereumConfig) => domain.type === Network.EVM
-  ) as Array<EthereumConfig>;
+    evmNetworks = sharedConfig.domains.filter(
+      (domain: EthereumConfig) => domain.type === Network.EVM
+    ) as Array<EthereumConfig>;
+
+    // Validate results
+    if (sharedEVMDomainIDs.length === 0) {
+      throw new Error('No EVM domains found in config');
+    }
+    if (evmNetworks.length === 0) {
+      throw new Error('No EVM networks found in config');
+    }
+  } catch (error) {
+    console.error('Setup failed:', error);
+    throw error; // Re-throw to ensure calling code knows setup failed
+  }
 }
 
 const getTxExplorerUrl = ({
@@ -116,17 +136,17 @@ async function setGMPParameters(
 }
 
 export async function erc20Transfer(
-  SOURCE_CHAIN_IDs: number[] = [2, 10, 15],
+  SOURCE_IDs: number[] = [2, 10, 15],
   RESOURCE_IDs: string[] = [
     "0x0000000000000000000000000000000000000000000000000000000000001200",
     "0x1000000000000000000000000000000000000000000000000000000000000000",
   ],
-  DESTINATION_CHAIN_IDs: number[] = [2, 10, 15]
+  DESTINATION_IDs: number[] = [2, 10, 15]
 ): Promise<void> {
   let transferReport: string[] = [];
 
   for (const network of evmNetworks) {
-    if (SOURCE_CHAIN_IDs.includes(network.id)) {
+    if (SOURCE_IDs.includes(network.id)) {
       for (const resouce of network.resources) {
         if (RESOURCE_IDs.includes(resouce.resourceId)) {
           const sourceRessID = resouce.resourceId;
@@ -143,7 +163,7 @@ export async function erc20Transfer(
           for (let destNetwork of evmNetworks) {
             if (
               SourceCapID !== destNetwork.caipId &&
-              DESTINATION_CHAIN_IDs.includes(destNetwork.id)
+              DESTINATION_IDs.includes(destNetwork.id)
             ) {
               for (const resource of destNetwork.resources) {
                 if (sourceRessID === resource.resourceId) {
