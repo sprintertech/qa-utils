@@ -1,6 +1,4 @@
 import {
-  Config,
-  Network,
   EvmResource,
   Environment,
   getSygmaScanLink,
@@ -11,23 +9,23 @@ import {
   createFungibleAssetTransfer,
   FungibleTransferParams,
 } from "@buildwithsygma/evm";
-import dotenv from "dotenv";
 import { Wallet, ethers, providers } from "ethers";
 import Web3HttpProvider from "web3-providers-http";
-import { getContractAddress, getContractInterface } from "./contracts";
-import axios from "axios";
+import {
+  Contract,
+  getContractAddress,
+  getContractInterface,
+} from "./contracts";
+import { setupNetworkConfig, validateInputs } from "../shared/config";
+import { wait, getTxExplorerUrl } from "../shared/utils";
+import { TransferResult } from "../shared/types";
+import dotenv from "dotenv";
+import * as fs from 'fs';
+import * as path from 'path';
 
 dotenv.config();
 
-interface Domain {
-  id: number;
-  type: string;
-}
-
-type Contract = "sprinterName" | "storage" | "ERC721Payable";
-
 const sygmaEnv = process.env.SYGMA_ENV as Environment;
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const privateKey = process.env.PRIVATE_KEY;
 if (!privateKey) {
   throw new Error("Missing environment variable: PRIVATE_KEY");
@@ -35,7 +33,7 @@ if (!privateKey) {
 
 const MAX_FEE = "450000";
 const testSourceDomainIDs: number[] = [2];
-const testDestDomainIDs: number[] = [10];
+const testDestDomainIDs: number[] = [1];
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000001200",
 ];
@@ -44,61 +42,11 @@ let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
 let sharedEVMNonFungibleRessIDs: string[] = [];
 
-async function fetchRemoteFile(path: string) {
-  try {
-    const { data } = await axios.get(path);
-    return data;
-  } catch (error) {
-    console.error("Error fetching remote file:", error);
-    throw error;
-  }
-}
-
 async function setup() {
-  try {
-    const environment = process.env.SYGMA_ENV;
-    const defaultPath = 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json';
-    const configPath = {
-      devnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/balance-config-dev.json',
-      testnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json',
-      mainnet: 'https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json'
-    }[environment as string] || defaultPath;
-
-    const sharedConfig = await fetchRemoteFile(configPath);
-    
-    // Validate config structure
-    if (!sharedConfig || !sharedConfig.domains) {
-      throw new Error(`Invalid config received from ${configPath}. Config: ${JSON.stringify(sharedConfig)}`);
-    }
-
-    sharedEVMDomainIDs = sharedConfig.domains
-      .filter((domain: Domain) => domain.type === "evm")
-      .map((domain: Domain) => domain.id);
-
-    evmNetworks = sharedConfig.domains.filter(
-      (domain: EthereumConfig) => domain.type === Network.EVM
-    ) as Array<EthereumConfig>;
-
-    // Validate results
-    if (sharedEVMDomainIDs.length === 0) {
-      throw new Error('No EVM domains found in config');
-    }
-    if (evmNetworks.length === 0) {
-      throw new Error('No EVM networks found in config');
-    }
-  } catch (error) {
-    console.error('Setup failed:', error);
-    throw error; // Re-throw to ensure calling code knows setup failed
-  }
+  const config = await setupNetworkConfig();
+  sharedEVMDomainIDs = config.sharedEVMDomainIDs;
+  evmNetworks = config.evmNetworks;
 }
-
-const getTxExplorerUrl = ({
-  txHash,
-  chainId,
-}: {
-  txHash: string;
-  chainId: number;
-}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
 
 let amount: bigint;
 let contract: Contract;
@@ -142,8 +90,20 @@ export async function erc20Transfer(
     "0x1000000000000000000000000000000000000000000000000000000000000000",
   ],
   DESTINATION_IDs: number[] = [2, 10, 15]
-): Promise<void> {
-  let transferReport: string[] = [];
+): Promise<TransferResult[]> {
+  const availableResourceIds = evmNetworks
+    .flatMap((network) => network.resources)
+    .map((resource) => resource.resourceId);
+
+  validateInputs(
+    SOURCE_IDs,
+    DESTINATION_IDs,
+    RESOURCE_IDs,
+    sharedEVMDomainIDs,
+    availableResourceIds
+  );
+
+  const transferResults: TransferResult[] = [];
 
   for (const network of evmNetworks) {
     if (SOURCE_IDs.includes(network.id)) {
@@ -210,7 +170,7 @@ export async function erc20Transfer(
                         },
                       ],
                     },
-                    environment: sygmaEnv
+                    environment: sygmaEnv,
                   };
                   try {
                     const transfer = await createFungibleAssetTransfer(params);
@@ -245,13 +205,20 @@ export async function erc20Transfer(
                         process.env.SYGMA_ENV as Environment
                       )}`
                     );
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - success`
-                    );
-                  } catch (transferError) {
+                    transferResults.push({
+                      success: true,
+                      message: `Transfer successful`,
+                      sourceChainId: SourceChainID,
+                      destChainId: destNetwork.chainId,
+                      resourceId: resource.resourceId,
+                      txHash: response.hash 
+                    });
+                  } catch (transferError: unknown) {
+                    let errorMessage = "Unknown error occurred";
                     if (transferError instanceof Error) {
+                      errorMessage = transferError.message;
                       console.error(
-                        `Error during transfer transaction: ${transferError.message}`
+                        `Error during transfer transaction: ${errorMessage}`
                       );
                     } else {
                       console.error(
@@ -260,9 +227,13 @@ export async function erc20Transfer(
                         )}`
                       );
                     }
-                    transferReport.push(
-                      `Transfer from Source ${SourceChainID} to Destination ${destNetwork.chainId} of Resource ID ${resource.resourceId} - FAILED`
-                    );
+                    transferResults.push({
+                      success: false,
+                      message: `Transfer failed`,
+                      sourceChainId: SourceChainID,
+                      destChainId: destNetwork.chainId,
+                      resourceId: resource.resourceId,
+                    });
                     continue;
                   }
                   await wait(3500);
@@ -275,10 +246,50 @@ export async function erc20Transfer(
     }
   }
   console.log("Transfer Report:");
-  transferReport.forEach((report) => console.log(report));
+  transferResults.forEach((result) => {
+    console.log(
+      `${result.success ? "✓" : "✗"} Chain ${result.sourceChainId} -> ${
+        result.destChainId
+      } (${result.resourceId}): ${result.message}`
+    );
+    if (result.success && result.txHash) {
+      console.log(`   Sygma Explorer: ${getSygmaScanLink(result.txHash, sygmaEnv)}`);
+    }
+  });
+  return transferResults;
+}
+
+interface TransferLog {
+  timestamp: string;
+  transferReport: (TransferResult & { sygmaExplorerUrl?: string })[];
+}
+
+async function saveTransferLog(transferResults: TransferResult[]): Promise<void> {
+  const log: TransferLog = {
+    timestamp: new Date().toISOString(),
+    transferReport: transferResults.map(r => ({
+      ...r,
+      sygmaExplorerUrl: r.txHash ? getSygmaScanLink(r.txHash, sygmaEnv) : undefined
+    }))
+  };
+
+  const reportDir = path.join(__dirname, '..', 'reports');
+  if (!fs.existsSync(reportDir)) {
+    fs.mkdirSync(reportDir, { recursive: true });
+  }
+
+  const formattedDate = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
+  const filename = path.join(reportDir, `transfer-log-fungible_and_gmp_${formattedDate}.json`);
+  fs.writeFileSync(filename, JSON.stringify(log, null, 2));
+  console.log(`Transfer log saved to: ${filename}`);
 }
 
 (async () => {
-  await setup();
-  erc20Transfer();
+  try {
+    await setup();
+    const transferResults = await erc20Transfer();
+    await saveTransferLog(transferResults);
+  } catch (error) {
+    console.error('Error during execution:', error);
+  }
 })();

@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import fs from "fs";
 
-type Contract = "sprinterName" | "storage" | "ERC721Payable";
+export type Contract = "sprinterName" | "storage" | "ERC721Payable";
 
 export function getContractInterface(
   contract: Contract
