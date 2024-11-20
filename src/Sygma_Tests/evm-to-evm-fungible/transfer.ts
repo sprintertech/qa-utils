@@ -21,14 +21,6 @@ import * as path from 'path';
 
 dotenv.config();
 
-const testSourceDomainIDs: number[] = [2, 6, 11];
-const testDestDomainIDs: number[] = [5, 6, 10];
-const testResourceIds: string[] = [
-  "0x0000000000000000000000000000000000000000000000000000000000001100",
-  "0x0000000000000000000000000000000000000000000000000000000000000300",
-  "0x0000000000000000000000000000000000000000000000000000000000001200"
-];
-
 let networkConfig: NetworkConfig;
 let sharedEVMFungibleRessIDs: string[] = [];
 

@@ -32,15 +32,9 @@ if (!privateKey) {
 }
 
 const MAX_FEE = "450000";
-const testSourceDomainIDs: number[] = [2];
-const testDestDomainIDs: number[] = [1];
-const testResourceIds: string[] = [
-  "0x0000000000000000000000000000000000000000000000000000000000001200",
-];
 
 let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
-let sharedEVMNonFungibleRessIDs: string[] = [];
 
 async function setup() {
   const config = await setupNetworkConfig();
@@ -151,7 +145,7 @@ export async function erc20Transfer(
                     amount: amount,
                     recipientAddress: ethers.constants.AddressZero,
                     sourceAddress: sourceAddress,
-                    optionalGas: BigInt(300_000),
+                    optionalGas: BigInt(MAX_FEE),
                     optionalMessage: {
                       receiver: destinationAddress,
                       transactionId:

@@ -40,8 +40,6 @@ const contractAddresses: Record<number, string> = {
 };
 
 const MAX_FEE = "250000";
-const testSourceDomainIDs: number[] = [2];
-const testDestDomainIDs: number[] = [10];
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000000600",
 ];
