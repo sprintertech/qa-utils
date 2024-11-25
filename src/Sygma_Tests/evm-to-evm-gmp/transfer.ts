@@ -1,23 +1,22 @@
 import {
   type Eip1193Provider,
   Environment,
-  EthereumConfig,
-  Network,
+  EthereumConfig
 } from "@buildwithsygma/core";
 import { getSygmaScanLink } from "@buildwithsygma/core";
 import { createCrossChainContractCall } from "@buildwithsygma/evm";
 import dotenv from "dotenv";
 import { Wallet, ethers, providers } from "ethers";
 import Web3HttpProvider from "web3-providers-http";
-import { sepoliaBaseStorageContract } from "./index";
-import axios from "axios";
+import { sepoliaBaseStorageContract } from "./contracts/storage_contract";
+import { TransferResult, Domain } from "../shared/types";
+import { Command } from 'commander';
+import { parseArrayArg, wait, getTxExplorerUrl, getOverridesForPolygon, fetchRemoteFile } from "../shared/utils";
+import { setupNetworkConfig, validateInputs } from "../shared/config";
+import * as fs from 'fs';
+import * as path from 'path';
 
 dotenv.config();
-
-interface Domain {
-  id: number;
-  type: string;
-}
 
 interface TransferParams {
   sourceChainId: number;
@@ -40,9 +39,7 @@ const contractAddresses: Record<number, string> = {
   1993: "0xF5Ac994A5C402F4f426c2D7319C27912d5DBD7a8",
 };
 
-const MAX_FEE = "350000";
-const testSourceDomainIDs: number[] = [1];
-const testDestDomainIDs: number[] = [10];
+const MAX_FEE = "250000";
 const testResourceIds: string[] = [
   "0x0000000000000000000000000000000000000000000000000000000000000600",
 ];
@@ -56,86 +53,25 @@ let sharedEVMDomainIDs: number[] = [];
 let evmNetworks: Array<EthereumConfig> = [];
 let sharedEVMNonFungibleRessIDs: string[] = [];
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+interface TransferLog {
+  timestamp: string;
+  options: {
+    sourceChains: number[] | string;
+    destinationChains: number[] | string;
+  };
+  transferReport: (TransferResult & { sygmaExplorerUrl?: string })[];
+}
 
-function generateUniqueValue() {
+function generateUniqueValue(): `0x${string}` {
   return ethers.utils.hexlify(
     ethers.utils.formatBytes32String(Date.now().toString())
-  );
-}
-
-const getTxExplorerUrl = ({
-  txHash,
-  chainId,
-}: {
-  txHash: string;
-  chainId: number;
-}) => process.env[`SCAN_URL_${chainId}`] + `/tx/${txHash}`;
-
-async function getOverridesForPolygon() {
-  try {
-    const gasResponse = await fetch(
-      "https://gasstation.polygon.technology/amoy"
-    );
-    const { standard } = await gasResponse.json();
-    return {
-      maxFeePerGas: ethers.utils.parseUnits(standard.maxFee.toString(), "gwei"),
-      maxPriorityFeePerGas: ethers.utils.parseUnits(
-        standard.maxPriorityFee.toString(),
-        "gwei"
-      ),
-    };
-  } catch (error) {
-    console.error("Error fetching gas prices:", error);
-    return {};
-  }
-}
-
-async function fetchRemoteFile(path: string) {
-  try {
-    const { data } = await axios.get(path);
-    return data;
-  } catch (error) {
-    console.error("Error fetching remote file:", error);
-    throw error;
-  }
+  ) as `0x${string}`;
 }
 
 async function setup() {
-  const environment = process.env.SYGMA_ENV;
-  const defaultPath = 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json';
-  const configPath = {
-    devnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/balance-config-dev.json',
-    testnet: 'https://chainbridge-assets-stage.s3.us-east-2.amazonaws.com/shared-config-test.json',
-    mainnet: 'https://sygma-assets-mainnet.s3.us-east-2.amazonaws.com/shared-config-mainnet.json'
-  }[environment as string] || defaultPath;
-
-  try {
-    const sharedConfig = await fetchRemoteFile(configPath);
-    
-    if (!sharedConfig || !sharedConfig.domains) {
-      throw new Error(`Invalid config received from ${configPath}. Config: ${JSON.stringify(sharedConfig)}`);
-    }
-
-    sharedEVMDomainIDs = sharedConfig.domains
-      .filter((domain: Domain) => domain.type === "evm")
-      .map((domain: Domain) => domain.id);
-
-    evmNetworks = sharedConfig.domains.filter(
-      (domain: EthereumConfig) => domain.type === Network.EVM
-    ) as Array<EthereumConfig>;
-
-    // Add validation for empty arrays
-    if (sharedEVMDomainIDs.length === 0) {
-      throw new Error('No EVM domains found in config');
-    }
-    if (evmNetworks.length === 0) {
-      throw new Error('No EVM networks found in config');
-    }
-  } catch (error) {
-    console.error('Setup failed:', error);
-    throw error;
-  }
+  const config = await setupNetworkConfig();
+  sharedEVMDomainIDs = config.sharedEVMDomainIDs;
+  evmNetworks = config.evmNetworks;
 }
 
 function extractUniqueNonFungibleResourceIds() {
@@ -151,6 +87,7 @@ function extractUniqueNonFungibleResourceIds() {
 
 async function executeTransfer(params: TransferParams): Promise<string> {
   const valueToBeUpdated = generateUniqueValue();
+  console.log(`Value to be updated: ${valueToBeUpdated}`);
   const overrides =
     params.sourceChainId === 80002 ? await getOverridesForPolygon() : {};
 
@@ -160,9 +97,9 @@ async function executeTransfer(params: TransferParams): Promise<string> {
   >({
     gasLimit: BigInt(0),
     functionParameters: [
-      params.sourceAddress,
+      params.sourceAddress as `0x${string}`,
       valueToBeUpdated,
-      params.destinationAddress,
+      params.destinationAddress as `0x${string}`,
     ],
     functionName: "storeWithDepositor",
     destinationContractAbi: sepoliaBaseStorageContract,
@@ -200,8 +137,16 @@ export async function genericMessage(
   SOURCE_IDs: number[] = sharedEVMDomainIDs,
   RESOURCE_IDs: string[] = sharedEVMNonFungibleRessIDs,
   DESTINATION_IDs: number[] = sharedEVMDomainIDs
-): Promise<void> {
-  const transferReport: string[] = [];
+): Promise<TransferResult[]> {
+  validateInputs(
+    SOURCE_IDs, 
+    DESTINATION_IDs, 
+    RESOURCE_IDs, 
+    sharedEVMDomainIDs, 
+    sharedEVMNonFungibleRessIDs
+  );
+
+  const transferReport: TransferResult[] = [];
   const wallet = new Wallet(privateKey ?? "");
 
   // Filter source networks based on provided IDs
@@ -239,7 +184,7 @@ export async function genericMessage(
         );
 
         try {
-          await executeTransfer({
+          const txHash = await executeTransfer({
             sourceChainId: sourceNetwork.chainId,
             destinationChainId: destNetwork.chainId,
             resourceId: sourceResource.resourceId,
@@ -249,17 +194,24 @@ export async function genericMessage(
             wallet: connectedWallet,
           });
 
-          transferReport.push(
-            `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${sourceResource.resourceId} - success`
-          );
+          transferReport.push({
+            sourceChainId: sourceNetwork.chainId,
+            destChainId: destNetwork.chainId,
+            resourceId: sourceResource.resourceId,
+            success: true,
+            txHash
+          } as TransferResult);
         } catch (error) {
           console.error(
             "Transfer failed:",
             error instanceof Error ? error.message : error
           );
-          transferReport.push(
-            `Transfer from Source ${sourceNetwork.chainId} to Destination ${destNetwork.chainId} of Resource ID ${sourceResource.resourceId} - FAILED`
-          );
+          transferReport.push({
+            sourceChainId: sourceNetwork.chainId,
+            destChainId: destNetwork.chainId,
+            resourceId: sourceResource.resourceId,
+            success: false
+          } as TransferResult);
         }
 
         await wait(3500);
@@ -267,12 +219,82 @@ export async function genericMessage(
     }
   }
 
-  console.log("Transfer Report:");
-  transferReport.forEach((report) => console.log(report));
+  console.log("\nTransfer Report:");
+  transferReport.forEach(result => {
+    const symbol = result.success ? "✓" : "✗";
+    const message = `${symbol} Chain ${result.sourceChainId} -> ${result.destChainId} (${result.resourceId}): ${
+      result.success ? "Transfer successful" : "Transfer failed"
+    }`;
+    console.log(message);
+    if (result.success && result.txHash) {
+      console.log(`   Sygma Explorer: ${getSygmaScanLink(result.txHash, sygmaEnv)}`);
+    }
+  });
+
+  return transferReport;
 }
 
-(async () => {
-  await setup();
-  extractUniqueNonFungibleResourceIds();
-  genericMessage();
-})();
+async function saveTransferLog(
+  options: { source?: number[], destination?: number[] },
+  transferReport: TransferResult[]
+): Promise<void> {
+  const log: TransferLog = {
+    timestamp: new Date().toISOString(),
+    options: {
+      sourceChains: options.source || 'default',
+      destinationChains: options.destination || 'default'
+    },
+    transferReport: transferReport.map(r => ({
+      ...r,
+      sygmaExplorerUrl: r.txHash ? getSygmaScanLink(r.txHash, sygmaEnv) : undefined
+    }))
+  };
+
+  const reportDir = path.join(__dirname, '..', 'reports');
+  if (!fs.existsSync(reportDir)) {
+    fs.mkdirSync(reportDir, { recursive: true });
+  }
+
+  const formattedDate = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').split('Z')[0];
+  const filename = path.join(reportDir, `transfer-log-gmp_${formattedDate}.json`);
+  fs.writeFileSync(filename, JSON.stringify(log, null, 2));
+  console.log(`Transfer log saved to: ${filename}`);
+}
+
+if (require.main === module) {
+  const program = new Command();
+
+  program
+    .option('-s, --source <ids>', 'Source chain IDs (comma-separated)', parseArrayArg)
+    .option('-d, --destination <ids>', 'Destination chain IDs (comma-separated)', parseArrayArg)
+    .parse(process.argv);
+
+  const options = program.opts();
+
+  (async () => {
+    try {
+      console.log('Starting setup...');
+      await setup();
+      console.log('Setup complete');
+      
+      console.log('Extracting resource IDs...');
+      extractUniqueNonFungibleResourceIds();
+      console.log('Resource IDs extracted.');
+      
+      console.log('Starting transfer with options:', {
+        sourceChains: options.source || 'default',
+        destinationChains: options.destination || 'default'
+      });
+      
+      const transferReport = await genericMessage(
+        options.source || undefined,
+        testResourceIds,
+        options.destination || undefined
+      );
+
+      await saveTransferLog(options, transferReport);
+    } catch (error) {
+      console.error('Error during execution:', error);
+    }
+  })();
+}

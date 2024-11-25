@@ -11,6 +11,8 @@ This project contains scripts capable to execute E2E flows on Sygma testnet and 
   - EVM to EVM fungible transfers
   - EVM to EVM GMP transfers
   - Combined fungible and GMP transfers
+- The scripts are capable of running the tests with specific parameters so we can use specific scenarios for testing
+- Each script has reports to the console with the results of the execution and stored in the `src/Sygma_Tests/reports` folder   
 
 #### Sprinter API Calls with execution 
 - Location: `src/Sprinter_API_Tests/`
@@ -64,7 +66,7 @@ To get started with running Cypress tests from this repository, follow these ste
 The fungible transfer script supports the following optional parameters:
 
 ```bash
-# Basic usage
+# Basic usage will trigger ALL 2 ALL transfers
 yarn transfer:fungible
 
 # With specific source chains
@@ -76,22 +78,43 @@ yarn transfer:fungible -d 5,6,10
 # With specific resource IDs
 yarn transfer:fungible -r 0x0000000000000000000000000000000000000000000000000000000000001100
 
+# With specific amount
+yarn transfer:fungible -a 1000000000000000000
+
 # Combining parameters
-yarn transfer:fungible -s 2,6 -d 5,10 -r 0x0000000000000000000000000000000000000000000000000000000000001100
+yarn transfer:fungible -s 2,6 -d 5,10 -r 0x0000000000000000000000000000000000000000000000000000000000001100 -a 1000000000000000000
 ```
 
 Parameters:
 - `-s, --source`: Source chain IDs (comma-separated)
 - `-d, --destination`: Destination chain IDs (comma-separated)
 - `-r, --resources`: Resource IDs (comma-separated)
+- `-a, --amount`: Amount (comma-separated)
+- if a parameter is not provided, the script will use the default values which are all the valid values for the parameter
+- the amount parameter is recommended to be provided only with a sepcific resource ID so that the decimals are correctly applied
 
+#### GMP transfers:
 
-#### GMP transfers(All2All):
-```
+```bash
+# Basic usage will trigger ALL 2 ALL transfers
 yarn transfer:gmp
+
+# With specific source chains
+yarn transfer:fungible -s 2,6,11
+
+# With specific destination chains
+yarn transfer:fungible -d 5,6,10
+
+# Combining parameters
+yarn transfer:fungible -s 2,6 -d 5,10
 ```
 
-#### Fungible and GMP transfers(All2All):
+Parameters:
+- `-s, --source`: Source chain IDs (comma-separated)
+- `-d, --destination`: Destination chain IDs (comma-separated)
+- if a parameter is not provided, the script will use the default values which are all the valid values for the parameter
+
+#### Fungible and GMP transfers used as ALL2ALL combinations:
 ```
 yarn transfer:fungible_and_gmp
 ```
