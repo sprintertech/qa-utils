@@ -29,6 +29,7 @@ async function callApi(sendTx:boolean ) {
     };
   
     try {
+      console.log("Requst data", data);
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {

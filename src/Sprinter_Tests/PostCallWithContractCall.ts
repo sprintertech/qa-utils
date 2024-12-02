@@ -104,7 +104,7 @@ async function callApi(sendTx: boolean) {
     type: "fungible",
     whitelistedSourceChains: [84532],
   };
-  console.log("Data is here", data);
+  console.log("Request data", data);
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
