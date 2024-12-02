@@ -228,7 +228,7 @@ export async function erc20Transfer(
   transferResults.forEach(result => {
     const symbol = result.success ? "✓" : "✗";
     const message = `${symbol} Chain ${result.sourceChainId} -> ${result.destChainId} (${result.resourceId}): ${
-      result.success ? "Transfer successful" : "Transfer failed"
+      result.success ? "Deposit successful" : "Deposit failed"
     }`;
     console.log(message);
     if (result.success && result.txHash) {

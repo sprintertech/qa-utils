@@ -203,7 +203,7 @@ export async function genericMessage(
           } as TransferResult);
         } catch (error) {
           console.error(
-            "Transfer failed:",
+            "Deposit failed:",
             error instanceof Error ? error.message : error
           );
           transferReport.push({
@@ -223,7 +223,7 @@ export async function genericMessage(
   transferReport.forEach(result => {
     const symbol = result.success ? "✓" : "✗";
     const message = `${symbol} Chain ${result.sourceChainId} -> ${result.destChainId} (${result.resourceId}): ${
-      result.success ? "Transfer successful" : "Transfer failed"
+      result.success ? "Deposit successful" : "Deposit failed"
     }`;
     console.log(message);
     if (result.success && result.txHash) {
