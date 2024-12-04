@@ -66,7 +66,7 @@ async function processTransfer({
   web3Provider: Web3HttpProvider;
   amount?: bigint;
 }): Promise<TransferResult> {
-  const amountDecimals = (resource.decimals as number) - 1;
+  const amountDecimals = (resource.decimals as number) - 2;
   const transferAmount = amount ?? (BigInt(1) * BigInt(10 ** amountDecimals));
   console.log(`Transfer amount from command: ${amount}`);
   console.log(
