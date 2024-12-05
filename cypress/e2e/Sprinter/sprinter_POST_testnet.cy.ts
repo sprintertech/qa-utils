@@ -336,14 +336,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         params.sep_bridge_contract
       );
       expect(response.body.data[0].transaction.value).not.to.equal("0x0");
-      expect(response.body.data[0]).to.have.property("approvals");
-      expect(response.body.data[0].approvals[0].to).equal(
-        params.sep_USDC_contract
-      );
-      expect(response.body.data[0].approvals[0].value).equal("0x0");
-      expect(response.body.data[0].approvals[0].chainId).equal(
-        params.sepolia_chainID
-      );
+      expect(response.body.data[0]).to.have.property("approvals").to.be.null;
     });
   });
 
@@ -1021,11 +1014,11 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
     });
   });
 
-  // BUG https://github.com/ChainSafe/sprinter-api/issues/282
-  it.skip("Negative POST solution/call - Valid response with ETH + WETH from Base to B3 using Sprinter contract for mintPayable where TransferAmount (TA) > ETH AND TA > ETH + WETH  AND Treshold = 1", function () {
+ 
+  it("Negative POST solution/call - Valid response with ETH + WETH from Base to B3 using Sprinter contract for mintPayable where TransferAmount (TA) < ETH + WETH AND TA > ETH + WETH - Treshold", function () {
     const data = {
       account: params.test_weth_wallet,
-      amount: "70000000000000000",
+      amount: "90000000000000000",
       destination: params.b3_chainID,
       destinationContractCall: {
         // approvalAddress: params.contract_ERC721_b3,
@@ -1035,7 +1028,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         // outputTokenAddress: params.base_USDC_contract
       },
       recipient: params.test_weth_wallet,
-      threshold: `70000000000000000`,
+      threshold: `90000000000000000`,
       token: "eth",
       type: "fungible",
       whitelistedSourceChains: [params.base_chainID],
@@ -1060,7 +1053,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         .equals("No solution found");
       expect(response.body)
         .to.have.property("debug")
-        .contains("user doesn't have enough funds to execute solution\nacross");
+        .contains("no possible solution available");
     });
   });
 
