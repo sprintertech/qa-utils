@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 import "cypress-plugin-api";
-import { param } from "cypress/types/jquery";
 import { Web3 } from "web3";
 import { AbiItem } from "web3-utils";
 import dotenv from "dotenv";
@@ -24,7 +23,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
       const id = 911003;
       const dataStr = `Test_911003`;
 
-      cy.task("readAbiFile", "src/ABIS/sprinterName.json").then((result) => {
+      cy.task("readAbiFile", "cypress/fixtures/ABIS/sprinterName.json").then((result) => {
         const contractABI_Sprinter = result as AbiItem[];
         const contract = new web3js.eth.Contract(
           contractABI_Sprinter,
@@ -36,7 +35,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         cy.wrap(callData).as("callData_usdc_2000000"); // Store the callData for later use
       });
 
-      cy.task("readAbiFile", "src/ABIS/ERC721Payable.json").then((result) => {
+      cy.task("readAbiFile", "cypress/fixtures/ABIS/ERC721Payable.json").then((result) => {
         const contractABI_ERC721 = result as AbiItem[];
         const contract = new web3js.eth.Contract(
           contractABI_ERC721,
@@ -180,6 +179,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -224,6 +224,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -267,6 +268,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -815,6 +817,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       // Assertions
@@ -860,6 +863,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -917,6 +921,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1088,6 +1093,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1146,6 +1152,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1204,6 +1211,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1262,6 +1270,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1307,6 +1316,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1358,6 +1368,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);

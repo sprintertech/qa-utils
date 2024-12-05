@@ -1,25 +1,10 @@
-# QA Utils
+# QA Utils - Cypress API Testing
 
-This project contains scripts capable to execute E2E flows on Sygma testnet and mainnet environments, Sprinter API calls with execution and Cypress API tests for Sprinter - mainly for regression testing.
+This project contains Cypress API tests for Sprinter, primarily focused on regression testing.
 
-### Project Structure
+## Project Structure
 
-#### Sygma Tests
-- Location: `src/Sygma_Tests/`
-- Contains end-to-end test flows for Sygma testnet and mainnet environments
-- Includes tests for:
-  - EVM to EVM fungible transfers
-  - EVM to EVM GMP transfers
-  - Combined fungible and GMP transfers
-- The scripts are capable of running the tests with specific parameters so we can use specific scenarios for testing
-- Each script has reports to the console with the results of the execution and stored in the `src/Sygma_Tests/reports` folder   
-
-#### Sprinter API Calls with execution 
-- Location: `src/Sprinter_API_Tests/`
-- Contains direct API call tests for the Sprinter service
-- Tests various API endpoints and functionality
-
-#### Cypress API Tests
+### Cypress API Tests
 - Location: `cypress/e2e/Sprinter/`
 - API testing suite using Cypress
 - Includes:
@@ -28,144 +13,63 @@ This project contains scripts capable to execute E2E flows on Sygma testnet and 
   - Response validation
   - Error handling scenarios
 
-**Getting Started**
-
-### Prerequisites
-
-Make sure you have the following installed on your system:
+## Prerequisites
 
 - Node.js (version 14.x or later)
-- Yarn 
-- Cypress installed either globally or locally within your project
+- npm or yarn
+- Cypress (installed via package.json)
 
-### Setup
-
-To get started with running Cypress tests from this repository, follow these steps:
+## Setup
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/sygmaprotocol/qa-utils.git
-   ```
+```bash
+git clone https://github.com/sygmaprotocol/qa-utils.git
+```
 
 2. Navigate to project directory:
-   ```bash
-   cd qa-utils
-   ```
+```bash
+cd qa-utils
+```
+
 3. Install dependencies:
-   ```bash
-   yarn install
-   ```
-4. Populate with correct values the `.env` file. Check the `.env.example` for reference.
+```bash
+yarn install
+```
+
+4. Set up environment variables:
+   - Copy `.env.example` to `.env`
+   - Update the values in `.env` with your configuration
 
 ## Running Tests
 
-### **Sygma Tests**
+### Headless Mode
 
-#### Fungible transfers:
-
-The fungible transfer script supports the following optional parameters:
-
+Run GET tests:
 ```bash
-# Basic usage will trigger ALL 2 ALL transfers
-yarn transfer:fungible
-
-# With specific source chains
-yarn transfer:fungible -s 2,6,11
-
-# With specific destination chains
-yarn transfer:fungible -d 5,6,10
-
-# With specific resource IDs
-yarn transfer:fungible -r 0x0000000000000000000000000000000000000000000000000000000000001100
-
-# With specific amount
-yarn transfer:fungible -a 1000000000000000000
-
-# Combining parameters
-yarn transfer:fungible -s 2,6 -d 5,10 -r 0x0000000000000000000000000000000000000000000000000000000000001100 -a 1000000000000000000
+yarn cypress:run:get
 ```
 
-Parameters:
-- `-s, --source`: Source chain IDs (comma-separated)
-- `-d, --destination`: Destination chain IDs (comma-separated)
-- `-r, --resources`: Resource IDs (comma-separated)
-- `-a, --amount`: Amount (comma-separated)
-- if a parameter is not provided, the script will use the default values which are all the valid values for the parameter
-- the amount parameter is recommended to be provided only with a sepcific resource ID so that the decimals are correctly applied
-
-#### GMP transfers:
-
+Run POST tests:
 ```bash
-# Basic usage will trigger ALL 2 ALL transfers
-yarn transfer:gmp
-
-# With specific source chains
-yarn transfer:fungible -s 2,6,11
-
-# With specific destination chains
-yarn transfer:fungible -d 5,6,10
-
-# Combining parameters
-yarn transfer:fungible -s 2,6 -d 5,10
+yarn cypress:run:post
 ```
 
-Parameters:
-- `-s, --source`: Source chain IDs (comma-separated)
-- `-d, --destination`: Destination chain IDs (comma-separated)
-- if a parameter is not provided, the script will use the default values which are all the valid values for the parameter
-
-#### Fungible and GMP transfers used as ALL2ALL combinations:
-```
-yarn transfer:fungible_and_gmp
+Run all Sprinter API tests:
+```bash
+yarn cypress:run:tests
 ```
 
-### **Sprinter API Tests with execution**
+### Interactive Mode (Cypress Test Runner)
 
-#### PostCall without ContractCall
-Be sure to set account, amount, destination, token, whitelistedSourceChains and threshold in the [PostCallNoContractCall.ts](src/Sprinter_Tests/PostCallNoContractCall.ts) file prior to running the script.
-
-```
-yarn postCall
-```
-#### PostCall with ContractCall
-Be sure to set account, amount, destination, token, whitelistedSourceChains, threshold, approvalAddress, callData, contractAddress, gasLimit and outputTokenAddress in the [PostCallWithContractCall.ts](src/Sprinter_Tests/PostCallWithContractCall.ts) file prior to running the script.
-
-```
-yarn postaCallContract
-```   
-
-### **Cypress API Tests**
-
-There are several ways to run the Cypress tests in this project:
-
-### 1. Headless Mode (Default Electron Browser)
-
-For all the GET tests
-```
-yarn cypress:run:get 
-```
-For all the POST tests
-```
-yarn cypress:run:post 
-```
-For all the Sprinter API calls tests
-```
-yarn cypress:run:tests 
-```
-
-### 2. Running Tests in the Cypress Test Runner (GUI)
-
-If you prefer to run the tests in the Cypress Test Runner for debugging:
-```
+Open Cypress Test Runner:
+```bash
 yarn cypress:open
 ```
 
-This will open the Cypress Test Runner, and you can manually select sprinter_GET_testnet.cy.ts from the UI.
+### Running Tests in Specific Browsers
 
-### 3. Running Tests in Specific Browsers
-
-You can also run the tests in specific browsers in headless mode. For example, to run the tests in Chrome:
-```
+Run tests in Chrome:
+```bash
 yarn cypress run --spec cypress/e2e/Sprinter/sprinter_GET_testnet.cy.ts --browser chrome
 ```
 

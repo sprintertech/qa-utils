@@ -17,6 +17,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -34,6 +35,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -71,6 +73,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -107,6 +110,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -175,6 +179,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -198,6 +203,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -290,6 +296,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -323,6 +330,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -362,6 +370,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());
@@ -665,6 +674,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     cy.api({
       method: 'GET',
       url: apiUrl,
+      failOnStatusCode: false
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log('Response Status:', response.status.toString());

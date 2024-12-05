@@ -1,20 +1,15 @@
 {
+  "name": "qa-utils",
+  "version": "1.0.0",
+  "description": "Cypress API testing suite for Sprinter",
   "dependencies": {
-    "@buildwithsygma/core": "^1.4.0",
-    "@buildwithsygma/evm": "^1.5.0",
-    "@buildwithsygma/substrate": "^1.0.4",
-    "axios": "^1.7.7",
     "cypress-plugin-api": "^2.11.2",
     "dotenv": "^16.4.5",
-    "ethers": "^5.7.2",
-    "node-fetch": "^2.7.0",
-    "ts-node": "^10.9.2",
     "web3": "^4.13.0",
-    "web3-providers-http": "1.10.4"
+    "web3-utils": "^4.13.0"
   },
   "devDependencies": {
     "@types/cypress": "^1.1.3",
-    "@types/node": "^22.7.4",
     "cypress": "^13.15.0",
     "mochawesome": "^7.1.3",
     "mochawesome-merge": "^4.3.0",
@@ -22,13 +17,9 @@
     "typescript": "^5.6.2"
   },
   "scripts": {
+    "cypress:open": "cypress open",
     "cypress:run:get": "cypress run --spec cypress/e2e/Sprinter/sprinter_GET_testnet.cy.ts",
     "cypress:run:post": "cypress run --spec cypress/e2e/Sprinter/sprinter_POST_testnet.cy.ts",
-    "cypress:run:tests": "cypress run --spec cypress/e2e/Sprinter/sprinter_GET_testnet.cy.ts,cypress/e2e/Sprinter/sprinter_POST_testnet.cy.ts",
-    "transfer:fungible": "ts-node src/Sygma_Tests/evm-to-evm-fungible/transfer.ts",
-    "transfer:gmp": "ts-node src/Sygma_Tests/evm-to-evm-gmp/transfer.ts",
-    "transfer:fungible_and_gmp": "ts-node src/Sygma_Tests/evm-to-evm-fungible_and_gmp/transfer.ts",
-    "postCall": "ts-node src/Sprinter_Tests/PostCallNoContractCall.ts",
-    "postaCallContract": "ts-node src/Sprinter_Tests/PostCallWithContractCall.ts"
+    "cypress:run:tests": "cypress run --spec 'cypress/e2e/Sprinter/*.cy.ts'"
   }
 }
