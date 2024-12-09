@@ -358,7 +358,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
 
   it('GET request /solutions/aggregation - Sepolia to Base with USDC with all valid data', () => {
     const queryParams = new URLSearchParams({
-      account:params.your_wallet,
+      account:params.test_wallet_assertions,
       destination: `${params.base_chainID}`,
       token:'usdc',
       amount: '12000000',
@@ -391,7 +391,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       expect(response.body.data[0]).to.have.property('approvals');
       expect(response.body.data[0].approvals[0]['data']).length.above(10);
       expect(response.body.data[0].approvals[0]['to']).equal(`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`);
-      expect(response.body.data[0].approvals[0]['from']).equal(`${params.your_wallet}`);
+      expect(response.body.data[0].approvals[0]['from']).equal(`${params.test_wallet_assertions}`);
       expect(response.body.data[0].approvals[0]['value']).equal(`0x0`);
       expect(response.body.data[0].approvals[0]['chainId']).equal(params.sepolia_chainID);
   
@@ -601,8 +601,8 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
-  // BUG here https://github.com/ChainSafe/sprinter-api/issues/262 - > https://github.com/ChainSafe/sprinter-api/issues/257
-  it.skip('Negative - GET request /solutions/aggregation - with a bad whitelisteSourceChain id (338 Cronos)', () => {
+  
+  it('Negative - GET request /solutions/aggregation - with a bad whitelisteSourceChain id (338 Cronos)', () => {
     const queryParams = new URLSearchParams({
       account:`${params.test_wallet_assertions}`,
       destination: `${params.base_chainID}`,
@@ -626,7 +626,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       // Assertions
       expect(response.status).to.eq(400); 
       expect(response.body).to.have.property('error');
-      expect(response.body.error).equal(`Key: 'queryParams.Destination' Error:Field validation for 'Destination' failed on the 'supported_chain' tag`);
+      expect(response.body.error).equal(`Key: 'queryParams.WhitelistedSourceChains' Error:Field validation for 'WhitelistedSourceChains' failed on the 'supported_chains' tag`);
   
     });
   });
@@ -662,7 +662,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
 
   it('GET request /solutions/aggregation - Base to B3 with ETH', () => {
     const queryParams = new URLSearchParams({
-      account:params.your_wallet,
+      account:params.test_wallet_assertions,
       destination: `${params.b3_chainID}`,
       token:'eth',
       amount: '1000000000000000',

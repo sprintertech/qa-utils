@@ -19,7 +19,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
       params = data;
       const name = "SP_claimName_test01";
       const amountClaimed = `2000000`;
-      const account = params.your_wallet;
+      const account = params.test_wallet_assertions;
       const id = 911003;
       const dataStr = `Test_911003`;
 
@@ -161,10 +161,10 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
 
   it("POST solution/call - Valid response with USDC from Sep to Base with missing destinationContractCall param but still recipient set to other address", function () {
     const data = {
-      account: params.your_wallet,
+      account: params.test_wallet_assertions,
       amount: "2000000",
       destination: params.base_chainID,
-      recipient: "0xF956271abfe93C60DaEBfbF4392d263a217C42d1",
+      recipient: "0xB99437c5B65e7B65429b368b7cF6A4cFF482C147",
       threshold: `${params.threshold}`,
       token: params.token,
       type: "fungible",
@@ -252,7 +252,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
 
   it("POST solution/call - Valid response with USDC from Sep to Base with missing destinationContractCall param, missing recipietn address and treshold value", function () {
     const data = {
-      account: params.your_wallet,
+      account: params.test_wallet_assertions,
       amount: "2000000",
       destination: params.base_chainID,
       token: params.token,
@@ -785,7 +785,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
 
   it("POST solution/call - Valid response with ETH from Base to B3 using Sprinter contract for mintPayable method for ETH", function () {
     const data = {
-      account: params.your_wallet,
+      account: params.test_wallet_assertions,
       amount: params.b3_NFT_price_eth,
       destination: params.b3_chainID,
       destinationContractCall: {
@@ -795,7 +795,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         gasLimit: 420000,
         // outputTokenAddress: params.base_USDC_contract
       },
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       threshold: `${params.threshold}`,
       token: "eth",
       type: "fungible",
@@ -1072,7 +1072,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1131,7 +1131,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1190,7 +1190,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
       //   outputTokenAddress: params.base_USDC_contract
       // },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1249,7 +1249,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.base_chainID],
@@ -1295,7 +1295,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         // outputTokenAddress: params.base_USDC_contract
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "eth",
       type: "fungible",
       whitelistedSourceChains: [params.base_chainID, params.b3_chainID],
@@ -1347,7 +1347,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         // outputTokenAddress: params.base_USDC_contract
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "eth",
       type: "fungible",
       whitelistedSourceChains: [params.base_chainID, params.b3_chainID],
@@ -1399,7 +1399,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1440,7 +1440,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1481,7 +1481,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "usdc",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1522,7 +1522,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDP",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1563,7 +1563,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1602,7 +1602,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1643,7 +1643,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1682,7 +1682,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1721,7 +1721,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1762,7 +1762,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1803,7 +1803,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1844,7 +1844,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "funligbe",
       whitelistedSourceChains: [params.sepolia_chainID, params.b3_chainID],
@@ -1885,7 +1885,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         outputTokenAddress: params.base_USDC_contract,
       },
       threshold: `${params.threshold}`,
-      recipient: params.your_wallet,
+      recipient: params.test_wallet_assertions,
       token: "USDC",
       type: "fungible",
       whitelistedSourceChains: [338],
