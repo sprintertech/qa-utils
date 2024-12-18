@@ -1,6 +1,6 @@
 # QA Utils
 
-This project contains scripts capable to execute E2E flows on Sygma testnet and mainnet environments, Sprinter API calls with execution and Cypress API tests for Sprinter - mainly for regression testing.
+This project contains scripts capable to trigger Execution flows on Sygma testnet and mainnet environments and Sprinter API calls with execution.
 
 ### Project Structure
 
@@ -19,28 +19,14 @@ This project contains scripts capable to execute E2E flows on Sygma testnet and 
 - Contains direct API call tests for the Sprinter service
 - Tests various API endpoints and functionality
 
-#### Cypress API Tests
-- Location: `cypress/e2e/Sprinter/`
-- API testing suite using Cypress
-- Includes:
-  - GET request tests
-  - POST request tests
-  - Response validation
-  - Error handling scenarios
-
-**Getting Started**
-
 ### Prerequisites
 
 Make sure you have the following installed on your system:
 
 - Node.js (version 14.x or later)
 - Yarn 
-- Cypress installed either globally or locally within your project
 
 ### Setup
-
-To get started with running Cypress tests from this repository, follow these steps:
 
 1. Clone the repository:
    ```bash
@@ -127,46 +113,19 @@ Be sure to set account, amount, destination, token, whitelistedSourceChains and 
 ```
 yarn postCall
 ```
+
 #### PostCall with ContractCall
 Be sure to set account, amount, destination, token, whitelistedSourceChains, threshold, approvalAddress, callData, contractAddress, gasLimit and outputTokenAddress in the [PostCallWithContractCall.ts](src/Sprinter_Tests/PostCallWithContractCall.ts) file prior to running the script.
 
 ```
-yarn postaCallContract
-```   
-
-### **Cypress API Tests**
-
-There are several ways to run the Cypress tests in this project:
-
-### 1. Headless Mode (Default Electron Browser)
-
-For all the GET tests
-```
-yarn cypress:run:get 
-```
-For all the POST tests
-```
-yarn cypress:run:post 
-```
-For all the Sprinter API calls tests
-```
-yarn cypress:run:tests 
+yarn postCallContract
 ```
 
-### 2. Running Tests in the Cypress Test Runner (GUI)
+#### PostCall with Swap
+Be sure to set account, amount, destination, token, whitelistedSourceChains, threshold, approvalAddress, callData, contractAddress, gasLimit and outputTokenAddress in the [PostCallWithContractCall.ts](src/Sprinter_Tests/PostCallWithContractCall.ts) file prior to running the script.
 
-If you prefer to run the tests in the Cypress Test Runner for debugging:
 ```
-yarn cypress:open
-```
-
-This will open the Cypress Test Runner, and you can manually select sprinter_GET_testnet.cy.ts from the UI.
-
-### 3. Running Tests in Specific Browsers
-
-You can also run the tests in specific browsers in headless mode. For example, to run the tests in Chrome:
-```
-yarn cypress run --spec cypress/e2e/Sprinter/sprinter_GET_testnet.cy.ts --browser chrome
+yarn postSwapCall
 ```
 
 

@@ -3,9 +3,5 @@ src/utils/RawTX/.env
 src/utils/SptrinterAPI/.env
 node_modules/
 yarn.lock
-cypress/screenshots
-cypress/downloads
-cypress/reports
-cypress/screenshots
 .env
 src/Sygma_Tests/reports/*

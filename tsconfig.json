@@ -108,6 +108,6 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   
-  "include": ["src/**/*","cypress/**/*.ts"],  // Include all files in the 'src' folder
-  "exclude": ["node_modules","cypress/support" ]  // Exclude 'node_modules' folder
+  "include": ["src/**/*"],  // Include all files in the 'src' folder
+  "exclude": ["node_modules"]  // Exclude 'node_modules' folder
 }

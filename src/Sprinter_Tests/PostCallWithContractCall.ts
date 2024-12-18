@@ -9,6 +9,7 @@ dotenv.config();
 const abiPathSprinterName = "src/ABIS/sprinterName.json";
 const abiPathERC721Payable = "src/ABIS/ERC721Payable.json";
 const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+// const apiUrl = "http://127.0.0.1:8080/solution/call";
 const walletPk = process.env.PRIVATE_KEY || '';
 if (!walletPk) {
   throw new Error("Missing environment variable: PRIVATE_KEY");
@@ -81,8 +82,8 @@ async function contractCallData(
 }
 
 async function callApi(sendTx: boolean) {
-  const destChainId = 11155111;
-  const tokenType = "eth";
+  const destChainId = 84532;
+  const tokenType = "usdc";
   const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
 
   await contractCallData(destChainId, tokenType, account);
@@ -102,7 +103,7 @@ async function callApi(sendTx: boolean) {
     threshold: "1",
     token: tokenType,
     type: "fungible",
-    whitelistedSourceChains: [84532],
+    whitelistedSourceChains: [11155111],
   };
   console.log("Request data", data);
   try {
@@ -180,4 +181,4 @@ async function callApi(sendTx: boolean) {
   }
 }
 
-callApi(false);
+callApi(true);

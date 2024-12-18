@@ -9,11 +9,11 @@ const apiUrl = "http://127.0.0.1:8080/solution/call";
 const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
-  const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
+  const account = "0x1C7B3EeC71b6f4fE5ec5e521Fd4363ceC867a07c";
   const data = {
     account: account,
-    amount: "240000",
-    destination: 11155111,
+    amount: "60000000000000000",
+    destination: 84532,
     //   destinationContractCall: {
     //     approvalAddress: CONTRACT_ADDRESS,
     //     callData: callData,
@@ -21,12 +21,13 @@ async function callApi(sendTx: boolean) {
     //     gasLimit: 420000,
     //     outputTokenAddress: token_ADDRESS
     // },
-    //   recipient:"",
+    recipient: account,
+    enableSwaps: true,
     threshold: "1",
-    token: "usdc",
+    token: "eth",
     type: "fungible",
-    whitelistedSourceChains: [84532],
-    whitelistedTools: ["relay"],
+    whitelistedSourceChains: [11155111],
+    whitelistedTools: ["sygma"],
   };
 
   try {
