@@ -4,15 +4,15 @@ const fetch = require("node-fetch");
 
 dotenv.config();
 
-// const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
-const apiUrl = "http://127.0.0.1:8080/solution/call";
+const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+// const apiUrl = "http://127.0.0.1:8080/solution/call";
 const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
   const account = "0x1C7B3EeC71b6f4fE5ec5e521Fd4363ceC867a07c";
   const data = {
     account: account,
-    amount: "60000000000000000",
+    amount: "16330000",
     destination: 84532,
     //   destinationContractCall: {
     //     approvalAddress: CONTRACT_ADDRESS,
@@ -24,7 +24,7 @@ async function callApi(sendTx: boolean) {
     recipient: account,
     enableSwaps: true,
     threshold: "1",
-    token: "eth",
+    token: "usdc",
     type: "fungible",
     whitelistedSourceChains: [11155111],
     whitelistedTools: ["sygma"],
