@@ -23,29 +23,33 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
       const id = 911003;
       const dataStr = `Test_911003`;
 
-      cy.task("readAbiFile", "cypress/fixtures/ABIS/sprinterName.json").then((result) => {
-        const contractABI_Sprinter = result as AbiItem[];
-        const contract = new web3js.eth.Contract(
-          contractABI_Sprinter,
-          `${params.contract_Sprinter_base}`
-        );
-        const callData = contract.methods
-          .claimName(name, account, amountClaimed)
-          .encodeABI();
-        cy.wrap(callData).as("callData_usdc_2000000"); // Store the callData for later use
-      });
+      cy.task("readAbiFile", "cypress/fixtures/ABIS/sprinterName.json").then(
+        (result) => {
+          const contractABI_Sprinter = result as AbiItem[];
+          const contract = new web3js.eth.Contract(
+            contractABI_Sprinter,
+            `${params.contract_Sprinter_base}`
+          );
+          const callData = contract.methods
+            .claimName(name, account, amountClaimed)
+            .encodeABI();
+          cy.wrap(callData).as("callData_usdc_2000000"); // Store the callData for later use
+        }
+      );
 
-      cy.task("readAbiFile", "cypress/fixtures/ABIS/ERC721Payable.json").then((result) => {
-        const contractABI_ERC721 = result as AbiItem[];
-        const contract = new web3js.eth.Contract(
-          contractABI_ERC721,
-          `${params.contract_Sprinter_base}`
-        );
-        const callData = contract.methods
-          .mintPayable(account, id, dataStr)
-          .encodeABI();
-        cy.wrap(callData).as("callData_eth_minPayable"); // Store the callData for later use
-      });
+      cy.task("readAbiFile", "cypress/fixtures/ABIS/ERC721Payable.json").then(
+        (result) => {
+          const contractABI_ERC721 = result as AbiItem[];
+          const contract = new web3js.eth.Contract(
+            contractABI_ERC721,
+            `${params.contract_Sprinter_base}`
+          );
+          const callData = contract.methods
+            .mintPayable(account, id, dataStr)
+            .encodeABI();
+          cy.wrap(callData).as("callData_eth_minPayable"); // Store the callData for later use
+        }
+      );
     });
   });
 
@@ -53,7 +57,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
     cy.viewport(1000, 900);
   });
 
-  // solution/call tests
+  // SOLUTION CALL solution/call tests
 
   it("POST solution/call - Valid response with USDC from Sep to Base using Sprinter contract for claimName method for USDC amount transfer == contract call amount", function () {
     const data = {
@@ -179,7 +183,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -224,7 +228,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -268,7 +272,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -810,7 +814,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       // Assertions
@@ -828,7 +832,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
     });
   });
 
-  // POST  solution/call WETH + ETH
+  // solution/call WETH + ETH
   it("POST solution/call - Valid response with ETH + WETH from Sepolia to B3 using Sprinter contract for mintPayable where TransferAmount (TA) > ETH AND TA < ETH + WETH  AND Treshold < remaining balance", function () {
     const data = {
       account: params.test_weth_wallet,
@@ -856,7 +860,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -914,7 +918,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1014,7 +1018,6 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
     });
   });
 
- 
   it("Negative POST solution/call - Valid response with ETH + WETH from Base to B3 using Sprinter contract for mintPayable where TransferAmount (TA) < ETH + WETH AND TA > ETH + WETH - Treshold", function () {
     const data = {
       account: params.test_weth_wallet,
@@ -1057,7 +1060,273 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
     });
   });
 
-  // solutions/aggregation tests
+  // solution/call with whitelist tools
+  it("POST solution/call - Valid response with USDC from Sep to Base where whitelistedTools is native", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "3000000", 
+      destination: params.sepolia_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: params.token,
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["native"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property("data");
+      expect(response.body.data[0].tool).to.have.property("name").equal("Native");
+      expect(response.body.data[0].sourceChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].destinationChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].amount).equal("3000000");
+      expect(response.body.data[0]).to.have.property("transaction");
+      expect(response.body.data[0].transaction.to).equal(
+        params.sep_USDC_contract
+      );
+      expect(response.body.data[0].transaction.value).not.to.equal("0x0");
+      expect(response.body.data[0]).to.have.property("approvals").to.be.null;
+
+    });
+  });
+
+  it("POST solution/call - Valid response with USDC from Sep to Base where whitelistedTools is sygma", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "3000000", 
+      destination: params.base_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: params.token,
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["sygma"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property("data");
+      expect(response.body.data[0].tool).to.have.property("name").equal("Sygma-Testnet");
+      expect(response.body.data[0].sourceChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].destinationChain).equal(params.base_chainID);
+      expect(response.body.data[0].amount).equal("3000000");
+      expect(response.body.data[0]).to.have.property("transaction");
+      expect(response.body.data[0].transaction.to).equal(
+        params.sep_bridge_contract
+      );
+      expect(response.body.data[0].transaction.value).not.to.equal("0x0");
+      expect(response.body.data[0]).to.have.property("approvals");
+      expect(response.body.data[0].approvals[0].to).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0].from).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0].value).equal("0x0");
+      expect(response.body.data[0].approvals[0].chainId).equal(params.sepolia_chainID);
+
+    });
+  });
+
+  it("POST solution/call - Valid response with USDC from Sep to Base where whitelistedTools is across", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "6000000", 
+      destination: params.base_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: params.token,
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["across"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property("data");
+      expect(response.body.data[0].tool).to.have.property("name").equal("Across");
+      expect(response.body.data[0].sourceChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].destinationChain).equal(params.base_chainID);
+      expect(response.body.data[0].amount).equal("6000000");
+      expect(response.body.data[0]).to.have.property("transaction");
+
+      expect(response.body.data[0].transaction.value).to.equal("0x0");
+      expect(response.body.data[0]).to.have.property("approvals");
+      expect(response.body.data[0].approvals[0].to).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0].from).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0].value).equal("0x0");
+      expect(response.body.data[0].approvals[0].chainId).equal(params.sepolia_chainID);
+
+    });
+  });
+
+  // Lifi does not have a testnet compatible with sprinter
+  it.skip("POST solution/call - Valid response with USDC from Sep to Base where whitelistedTools is lifi", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "6000000", 
+      destination: params.base_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: params.token,
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["lifi"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property("data");
+      expect(response.body.data[0].tool).to.have.property("name").equal("Lifi");
+      expect(response.body.data[0].sourceChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].destinationChain).equal(params.base_chainID);
+      expect(response.body.data[0].amount).equal("6000000");
+      expect(response.body.data[0]).to.have.property("transaction");
+
+      expect(response.body.data[0].transaction.value).to.equal("0x0");
+      expect(response.body.data[0]).to.have.property("approvals");
+      expect(response.body.data[0].approvals[0].to).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0].from).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0].value).equal("0x0");
+      expect(response.body.data[0].approvals[0].chainId).equal(params.sepolia_chainID);
+
+    });
+  });
+
+  //BUG https://github.com/ChainSafe/sprinter-api/issues/377 
+  it.skip("POST solution/call - Valid response with ETH from Sep to Base where whitelistedTools is relay", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "1000000000000000", 
+      destination: params.base_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: 'eth',
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["relay"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property("data");
+      expect(response.body.data[0].tool).to.have.property("name").equal("Across");
+      expect(response.body.data[0].sourceChain).equal(params.sepolia_chainID);
+      expect(response.body.data[0].destinationChain).equal(params.base_chainID);
+      expect(response.body.data[0].amount).equal("6000000");
+      expect(response.body.data[0]).to.have.property("transaction");
+
+      expect(response.body.data[0].transaction.value).to.equal("0x0");
+      expect(response.body.data[0]).to.have.property("approvals");
+      expect(response.body.data[0].approvals[0].to).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0].from).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0].value).equal("0x0");
+      expect(response.body.data[0].approvals[0].chainId).equal(params.sepolia_chainID);
+
+    });
+  });
+
+  it("Negative POST solution/call - Valid response with ETH from Sep to Base where whitelistedTools is invalide option", function () {
+    const data = {
+      account: params.test_wallet_assertions,
+      amount: "3000000", 
+      destination: params.base_chainID,
+      recipient: params.test_wallet_assertions,
+      threshold: `1`,
+      token: 'usdc',
+      type: "fungible",
+      whitelistedSourceChains: [params.sepolia_chainID],
+      whitelistedTools: ["asdad"],
+    };
+
+    cy.api({
+      method: "POST",
+      url: `${baseUrl}/solution/call`,
+      body: data,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json", 
+      },
+      failOnStatusCode: false,
+    }).then((response) => {
+      // Log request ID immediately
+      cy.log(`Request ID: ${response.headers["x-request-id"]}`);
+      cy.log(JSON.stringify(response.body));
+
+      // Assertions
+      expect(response.status).to.eq(400 );
+      expect(response.body).to.have.property("error").equal("Key: 'request.WhitelistedTools' Error:Field validation for 'WhitelistedTools' failed on the 'supported_tools' tag");
+    });
+  });
+
+  //SOLUTION AGGREGATION solutions/aggregation tests
 
   it("POST solutions/aggregation - Valid response with USDC from Sep and B3 to Base using Sprinter contract for claimName method for USDC amount transfer == contract call amount", function () {
     const data = {
@@ -1086,7 +1355,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1145,7 +1414,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1204,7 +1473,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1263,7 +1532,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1309,7 +1578,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);
@@ -1361,7 +1630,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         accept: "application/json",
         "Content-Type": "application/json",
       },
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       cy.log(JSON.stringify(response.body));
       cy.log(`x-request-id: ${response.headers["x-request-id"]}`);

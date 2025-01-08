@@ -2,6 +2,7 @@
     "your_wallet": "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
     "test_wallet_assertions": "0xB99437c5B65e7B65429b368b7cF6A4cFF482C147",
     "test_weth_wallet": "0x8672F5C85066F7C0fc52e88398de052Bb0920927",
+    "test_swap_wallet": "0x1C7B3EeC71b6f4fE5ec5e521Fd4363ceC867a07c",
     "token": "usdc",
     "sepolia_chainID": 11155111,
     "contract_Sprinter_sep": "0xf70fb86F700E8Bb7cDf1c20197633518235c3425",

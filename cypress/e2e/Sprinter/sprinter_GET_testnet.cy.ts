@@ -356,6 +356,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
+  // SOLUTION AGGREGATION 
   it('GET request /solutions/aggregation - Sepolia to Base with USDC with all valid data', () => {
     const queryParams = new URLSearchParams({
       account:params.test_wallet_assertions,
@@ -601,7 +602,6 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
-  
   it('Negative - GET request /solutions/aggregation - with a bad whitelisteSourceChain id (338 Cronos)', () => {
     const queryParams = new URLSearchParams({
       account:`${params.test_wallet_assertions}`,
@@ -696,5 +696,211 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       expect(response.body.data[0].approvals).is.null;      
     });
   });
+
+  // solution aggregation with Whitelist Tools
+
+  it('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as native', () => {
+    const queryParams = new URLSearchParams({
+      account:params.test_wallet_assertions,
+      destination: `${params.sepolia_chainID}`,
+      token:'usdc',
+      amount: '3000000',
+      threshold: `${params.threshold}`,
+      whitelistedSourceChains: `${params.sepolia_chainID}`,
+      whitelistedTools: "native"
+    }).toString();
+
+    const apiUrl = `${baseUrl}/solutions/aggregation?${queryParams}`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+     
+      // Assertions
+      expect(response.status).to.eq(200); 
+      expect(response.body).to.have.property('data');
+      expect(response.body.data[0]).to.have.property('sourceChain').equal(params.sepolia_chainID);
+      expect(response.body.data[0]).to.have.property('destinationChain').equal(params.sepolia_chainID);
+      expect(response.body.data[0].tool['name']).equal(`Native`);
+      expect(response.body.data[0]).to.have.property('transaction');
+      expect(response.body.data[0].transaction['to']).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].transaction['value']).not.equal(`0x0`);
+      expect(response.body.data[0].transaction['chainId']).equal(params.sepolia_chainID);  
+    });
+  });
+
+  it('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as sygma', () => {
+    const queryParams = new URLSearchParams({
+      account:params.test_wallet_assertions,
+      destination: `${params.base_chainID}`,
+      token:'usdc',
+      amount: '3000000',
+      threshold: `${params.threshold}`,
+      whitelistedSourceChains: `${params.sepolia_chainID}`,
+      whitelistedTools: "sygma"
+    }).toString();
+
+    const apiUrl = `${baseUrl}/solutions/aggregation?${queryParams}`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+     
+      // Assertions
+      expect(response.status).to.eq(200); 
+      expect(response.body).to.have.property('data');
+      expect(response.body.data[0]).to.have.property('sourceChain').equal(params.sepolia_chainID);
+      expect(response.body.data[0]).to.have.property('destinationChain').equal(params.base_chainID);
+      expect(response.body.data[0].tool['name']).equal(`Sygma-Testnet`);
+      expect(response.body.data[0]).to.have.property('transaction');
+      expect(response.body.data[0].transaction['to']).equal(params.sep_bridge_contract);
+      expect(response.body.data[0].transaction['value']).not.equal(`0x0`);
+      expect(response.body.data[0].transaction['chainId']).equal(params.sepolia_chainID);  
+      expect(response.body.data[0]).to.have.property('approvals');
+      expect(response.body.data[0].approvals[0]['to']).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0]['from']).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0]['value']).equal('0x0');
+      expect(response.body.data[0].approvals[0]['chainId']).equal(params.sepolia_chainID);
+    });
+  });
+
+  it.skip('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as lifi', () => {
+    const queryParams = new URLSearchParams({
+      account:params.test_wallet_assertions,
+      destination: `${params.base_chainID}`,
+      token:'usdc',
+      amount: '3000000',
+      threshold: `${params.threshold}`,
+      whitelistedSourceChains: `${params.sepolia_chainID}`,
+      whitelistedTools: "lifi"
+    }).toString();
+
+    const apiUrl = `${baseUrl}/solutions/aggregation?${queryParams}`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+     
+      // Assertions
+      expect(response.status).to.eq(200); 
+      expect(response.body).to.have.property('data');
+      expect(response.body.data[0]).to.have.property('sourceChain').equal(params.sepolia_chainID);
+      expect(response.body.data[0]).to.have.property('destinationChain').equal(params.base_chainID);
+      expect(response.body.data[0].tool['name']).equal(`Lifi`);
+      expect(response.body.data[0]).to.have.property('transaction');
+      expect(response.body.data[0].transaction['to']).equal(params.sep_bridge_contract);
+      expect(response.body.data[0].transaction['value']).not.equal(`0x0`);
+      expect(response.body.data[0].transaction['chainId']).equal(params.sepolia_chainID);  
+      expect(response.body.data[0]).to.have.property('approvals');
+      expect(response.body.data[0].approvals[0]['to']).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0]['from']).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0]['value']).equal('0x0');
+      expect(response.body.data[0].approvals[0]['chainId']).equal(params.sepolia_chainID);
+    });
+  });
+
+  it('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as across', () => {
+    const queryParams = new URLSearchParams({
+      account:params.test_wallet_assertions,
+      destination: `${params.base_chainID}`,
+      token:'usdc',
+      amount: '6000000',
+      threshold: `${params.threshold}`,
+      whitelistedSourceChains: `${params.sepolia_chainID}`,
+      whitelistedTools: "across"
+    }).toString();
+
+    const apiUrl = `${baseUrl}/solutions/aggregation?${queryParams}`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+     
+      // Assertions
+      expect(response.status).to.eq(200); 
+      expect(response.body).to.have.property('data');
+      expect(response.body.data[0]).to.have.property('sourceChain').equal(params.sepolia_chainID);
+      expect(response.body.data[0]).to.have.property('destinationChain').equal(params.base_chainID);
+      expect(response.body.data[0].tool['name']).equal(`Across`);
+      expect(response.body.data[0]).to.have.property('transaction');
+      expect(response.body.data[0].transaction['value']).equal(`0x0`);
+      expect(response.body.data[0].transaction['chainId']).equal(params.sepolia_chainID);  
+      expect(response.body.data[0]).to.have.property('approvals');
+      expect(response.body.data[0].approvals[0]['to']).equal(params.sep_USDC_contract);
+      expect(response.body.data[0].approvals[0]['from']).equal(params.test_wallet_assertions);
+      expect(response.body.data[0].approvals[0]['value']).equal('0x0');
+      expect(response.body.data[0].approvals[0]['chainId']).equal(params.sepolia_chainID);
+    });
+  });
+
+  it('Negative GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as incorrect option', () => {
+    const queryParams = new URLSearchParams({
+      account:params.test_wallet_assertions,
+      destination: `${params.base_chainID}`,
+      token:'usdc',
+      amount: '6000000',
+      threshold: `${params.threshold}`,
+      whitelistedSourceChains: `${params.sepolia_chainID}`,
+      whitelistedTools: "asdasd"
+    }).toString();
+
+    const apiUrl = `${baseUrl}/solutions/aggregation?${queryParams}`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+     
+      // Assertions
+      expect(response.status).to.eq(400); 
+      expect(response.body).to.have.property('error').equal("Key: 'queryParams.WhitelistedTools' Error:Field validation for 'WhitelistedTools' failed on the 'supported_tools' tag");
+    });
+  });
+
+  // Whitelist Tools
+
+  it('GET request /tools', () => {
+    const apiUrl = `${baseUrl}/tools`
+    cy.api({
+      method: 'GET',
+      url: apiUrl,
+      failOnStatusCode: false,
+    }).then((response) => {
+      cy.log(JSON.stringify(response.body));
+      cy.log('Response Status:', response.status.toString());
+      cy.log('Response Headers:', JSON.stringify(response.headers))
+      cy.log(`x-request-id: ${response.headers['x-request-id']}`)
+
+      // Assertions
+      expect(response.status).to.eq(200); 
+      expect(response.body).to.have.property('tools');
+      expect(response.body.tools).to.have.members(['native', 'sygma', 'across', 'lifi', 'relay']);
+    });
+  });
+
   
 });
