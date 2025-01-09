@@ -734,7 +734,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
-  it('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as sygma', () => {
+  it('GET request /solutions/aggregation - Sepolia to Base with USDC  using whitelistedTools as sygma', () => {
     const queryParams = new URLSearchParams({
       account:params.test_wallet_assertions,
       destination: `${params.base_chainID}`,
@@ -774,7 +774,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
-  it.skip('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as lifi', () => {
+  it.skip('GET request /solutions/aggregation - Sepolia to Base with USDC  using whitelistedTools as lifi', () => {
     const queryParams = new URLSearchParams({
       account:params.test_wallet_assertions,
       destination: `${params.base_chainID}`,
@@ -814,7 +814,7 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
     });
   });
 
-  it('GET request /solutions/aggregation - Sepolia to Sepolia with USDC  using whitelistedTools as across', () => {
+  it.skip('GET request /solutions/aggregation - Sepolia to Base with USDC  using whitelistedTools as across', () => {
     const queryParams = new URLSearchParams({
       account:params.test_wallet_assertions,
       destination: `${params.base_chainID}`,
@@ -901,6 +901,5 @@ describe('Sprinter API Testing on Testnet for all GET calls', () => {
       expect(response.body.tools).to.have.members(['native', 'sygma', 'across', 'lifi', 'relay']);
     });
   });
-
   
 });

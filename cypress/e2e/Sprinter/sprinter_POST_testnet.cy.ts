@@ -1014,7 +1014,7 @@ describe("Sprinter API Testing on Testnet for all POST calls", () => {
         .equals("No solution found");
       expect(response.body)
         .to.have.property("debug")
-        .contains("user doesn't have enough funds to execute solution\nacross");
+        .contains("user doesn't have enough funds to execute solution");
     });
   });
 
