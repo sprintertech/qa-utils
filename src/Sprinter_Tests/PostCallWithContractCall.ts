@@ -8,7 +8,8 @@ dotenv.config();
 
 const abiPathSprinterName = "src/ABIS/sprinterName.json";
 const abiPathERC721Payable = "src/ABIS/ERC721Payable.json";
-const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+// const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+const apiUrl = "https://api.sprinter.buildwithsygma.com/solution/call"; 
 // const apiUrl = "http://127.0.0.1:8080/solution/call";
 const walletPk = process.env.PRIVATE_KEY || '';
 if (!walletPk) {
@@ -25,17 +26,32 @@ const contractAddressesERC721Payable: Record<number, string> = {
   11155111: "0x99eb23BEC48bF56C80889cFbcBF2d491F8aC75fe",
   84532: "0xAf8De6Aa5004E8e323DCC93C683A55e5eE87b9e9",
   1993: "0xAf8De6Aa5004E8e323DCC93C683A55e5eE87b9e9",
+  8333: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  10: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  42161: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  1: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  8453: "0x1662aAa9754F9Bc20e34d89ED838CA9A5448764d",
 };
 const contractAddressesSprinterName: Record<number, string> = {
   84532: "0x3F9A68fF29B3d86a6928C44dF171A984F6180009",
   11155111: "0xf70fb86F700E8Bb7cDf1c20197633518235c3425",
   1993: "0x17e4C404aD634E429ebCdF9a10F38A96Ce8eEF27",
   421614: "0xD7d5E7d7eaD31E783Df01760FbFad249704Aab14",
+  8333: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  10: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  42161: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  1: "0x1307Bd6EA044bede2f48Acc400CC856a63281722",
+  8453: "0x1662aAa9754F9Bc20e34d89ED838CA9A5448764d",
 };
 const usdcAddress: Record<number, string> = {
   11155111: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   84532: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   1993: "0xE61e5ed4c4f198c5384Ef57E69aAD1eF0c911004",
+  8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  8333: "0x4FaCAeAB0b044617A94e94a54A8D6644A7f9E41B",
+  10: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+  42161: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
 };
 
 async function contractCallData(
@@ -82,7 +98,7 @@ async function contractCallData(
 }
 
 async function callApi(sendTx: boolean) {
-  const destChainId = 84532;
+  const destChainId = 8453;
   const tokenType = "usdc";
   const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
 
@@ -96,14 +112,16 @@ async function callApi(sendTx: boolean) {
       approvalAddress: approvalAddress,
       callData: callData,
       contractAddress: contractAddress,
-      gasLimit: 420000,
+      gasLimit: 250000,
       outputTokenAddress: outputTokenAddress,
     },
+    enableSwaps: false,
     recipient: account,
     threshold: "1",
     token: tokenType,
     type: "fungible",
-    whitelistedSourceChains: [11155111],
+    whitelistedSourceChains: [42161],
+    whitelistedTools: [ 'relay' ]
   };
   console.log("Request data", data);
   try {
@@ -181,4 +199,4 @@ async function callApi(sendTx: boolean) {
   }
 }
 
-callApi(true);
+callApi(false);

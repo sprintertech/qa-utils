@@ -4,16 +4,17 @@ const fetch = require("node-fetch");
 
 dotenv.config();
 
-const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
+// const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
 // const apiUrl = "http://127.0.0.1:8080/solution/call";
+const apiUrl = "https://api.sprinter.buildwithsygma.com/solution/call"; 
 const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
-  const account = "0x1C7B3EeC71b6f4fE5ec5e521Fd4363ceC867a07c";
+  const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
   const data = {
     account: account,
-    amount: "16330000",
-    destination: 84532,
+    amount: "8000000",
+    destination: 8453,
     //   destinationContractCall: {
     //     approvalAddress: CONTRACT_ADDRESS,
     //     callData: callData,
@@ -26,8 +27,8 @@ async function callApi(sendTx: boolean) {
     threshold: "1",
     token: "usdc",
     type: "fungible",
-    whitelistedSourceChains: [11155111],
-    whitelistedTools: ["sygma"],
+    whitelistedSourceChains: [10],
+    whitelistedTools: ["relay"],
   };
 
   try {
@@ -40,6 +41,9 @@ async function callApi(sendTx: boolean) {
       },
       body: JSON.stringify(data),
     });
+
+    const requestId = response.headers.get('x-request-id');
+    console.log("Request ID:", requestId);
 
     if (!response.ok) {
       const errorBody = await response.json();

@@ -4,65 +4,37 @@ const fetch = require("node-fetch");
 
 dotenv.config();
 
-// const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
-const apiUrl = "https://api.sprinter.buildwithsygma.com/solution/call"; 
+const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solutions/balance-sweep";
 // const apiUrl = "http://127.0.0.1:8080/solution/call";
 const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
-  const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
   const data = {
-    account: account,
-    amount: "1000000000000000",
-    destination: 8453,
-    //   destinationContractCall: {
-    //     approvalAddress: CONTRACT_ADDRESS,
-    //     callData: callData,
-    //     contractAddress: CONTRACT_ADDRESS,
-    //     gasLimit: 420000,
-    //     outputTokenAddress: token_ADDRESS
-    // },
-    enableSwaps: false,
-    recipient:"0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
-    threshold: "1",
-    token: "eth",
-    type: "fungible",
-    whitelistedSourceChains: [8333],
-    whitelistedTools: [ 'relay' ]
+    account : "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
+    recipient : "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
+    destination : 84532,
+    token : "usdc",
+    whitelistedSourceChains : [11155111],
+    whitelistedTools : "across"
   };
+
+  const url = `${apiUrl}?account=${data.account}&recipient=${data.recipient}&destination=${data.destination}&token=${data.token}&whitelistedSourceChains=${data.whitelistedSourceChains.join(',')}&whitelistedTools=${data.whitelistedTools}`;
 
   try {
     console.log("Requst data", data);
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json"
+        }
     });
 
-    // Get and log the request ID from headers
-    const requestId = response.headers.get('x-request-id');
-    console.log("Request ID:", requestId);
-
     if (!response.ok) {
-      let errorBody;
-      try {
-        errorBody = await response.text();
-        // Try to parse as JSON if possible
-        try {
-          errorBody = JSON.parse(errorBody);
-        } catch {
-          // Keep as text if not valid JSON
-        }
-      } catch (e) {
-        errorBody = 'Could not read error response';
-      }
+      const errorBody = await response.json();
       throw new Error(
-        `HTTP error! status: ${response.status}, message: ${
-          typeof errorBody === 'object' ? JSON.stringify(errorBody) : errorBody
-        }`
+        `HTTP error! status: ${response.status}, message: ${JSON.stringify(
+          errorBody
+        )}`
       );
     }
 
@@ -122,4 +94,4 @@ async function callApi(sendTx: boolean) {
   }
 }
 
-callApi(true);
+callApi(false);
