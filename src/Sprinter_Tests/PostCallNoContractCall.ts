@@ -4,17 +4,17 @@ const fetch = require("node-fetch");
 
 dotenv.config();
 
-// const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";
-const apiUrl = "https://api.sprinter.buildwithsygma.com/solution/call"; 
-// const apiUrl = "http://127.0.0.1:8080/solution/call";
+const apiUrl = "https://api.test.sprinter.buildwithsygma.com/solution/call";  //testnet
+// const apiUrl = "https://api.sprinter.buildwithsygma.com/solution/call";  //mainnet
+// const apiUrl = "http://127.0.0.1:8080/solution/call";  //local
 const walletPk = process.env.PRIVATE_KEY || ``;
 
 async function callApi(sendTx: boolean) {
   const account = "0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d";
   const data = {
     account: account,
-    amount: "1000000000000000",
-    destination: 8453,
+    amount: "2000000",
+    destination: 11155111,
     //   destinationContractCall: {
     //     approvalAddress: CONTRACT_ADDRESS,
     //     callData: callData,
@@ -25,9 +25,9 @@ async function callApi(sendTx: boolean) {
     enableSwaps: false,
     recipient:"0x9A17FA0A2824EA855EC6aD3eAb3Aa2516EC6626d",
     threshold: "1",
-    token: "eth",
+    token: "usdc",
     type: "fungible",
-    whitelistedSourceChains: [8333],
+    whitelistedSourceChains: [84532],
     whitelistedTools: [ 'relay' ]
   };
 
