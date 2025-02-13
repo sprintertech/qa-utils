@@ -94,7 +94,7 @@ async function processRebalanceWithFetch(provider: number = 0, sourceDomainId: C
         provider, // nonce remains the same
         circleData.message,
         circleData.attestation,
-        '0xd2A0E86773dD9dD12a0Fa2EC336511b39e17008C', // recipient address remains the same
+        '0xd2A0E86773dD9dD12a0Fa2EC336511b39e17008C', // reblancer contract address
         destinationChainId
     );
 
