@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import liquidityPoolABI from '../../../ABIS/liquidityPool.json';
+import liquidityPoolABI from '../../ABIS/liquidityPool.json';
 import dotenv from "dotenv";
 
 dotenv.config();

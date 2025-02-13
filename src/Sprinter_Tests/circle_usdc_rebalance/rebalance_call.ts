@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
-import rebalancerABI from '../../../ABIS/rebalancer.json';
+import rebalancerABI from '../../ABIS/rebalancer.json';
+import { CircleTestnet, runGetMessage } from './circle_rebalance_api';
 
 dotenv.config();
 
@@ -28,13 +29,13 @@ export const executeProcessRebalance = async (
     provider: number,
     message: string,
     attestation: string,
-    rebalancerAddress: string
-) => {
-    if (!process.env.PROVIDER_URL_11155111 || !process.env.PRIVATE_KEY_REBALANCER) {
+    rebalancerAddress: string,
+    destinationChainId: number ) => {
+    if (!process.env[`PROVIDER_URL_${destinationChainId}`] || !process.env.PRIVATE_KEY_REBALANCER) {
         throw new Error('Missing PROVIDER_URL_11155111 or PRIVATE_KEY_REBALANCER in environment variables');
     }
 
-    const rpcProvider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL_11155111);
+    const rpcProvider = new ethers.providers.JsonRpcProvider(process.env[`PROVIDER_URL_${destinationChainId}`]);
     const signer = new ethers.Wallet(process.env.PRIVATE_KEY_REBALANCER, rpcProvider);
 
     // Create contract instance
@@ -52,6 +53,8 @@ export const executeProcessRebalance = async (
         const tx = await rebalancerContract.processRebalance(...call.args, {
             gasLimit: 1000000, // Set a high gas limit
         });
+
+        console.log('Transaction sent to chain with hash:', tx.hash);
         
         try {
             const receipt = await tx.wait();
@@ -77,15 +80,29 @@ export const executeProcessRebalance = async (
     }
 };
 
-// Example usage
-async function processRebalance() {
+async function processRebalanceWithFetch(provider: number = 0, sourceDomainId: CircleTestnet, transactionHash: string, destinationChainId: number) {
+    // First fetch the attestation and message from Circle API
+    const circleData = await runGetMessage(sourceDomainId, transactionHash);
+    console.log(circleData);
+    
+    if (!circleData.attestation || !circleData.message) {
+        throw new Error("Failed to fetch attestation or message from Circle API");
+    }
+
+    // Now execute the rebalance with the fetched data
     const result = await executeProcessRebalance(
-        0, 
-        '0x000000000000000600000000000000000000157c0000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa50000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa5000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c00000000000000000000000000000000036cbd53842c5426634e7929541ec2318f3dcf7e000000000000000000000000b44aeab4843094dd086c26dd6ce284c417436deb00000000000000000000000000000000000000000000000000000000004c4b40000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c', 
-        '0x0ca2035f4c10527481de3ed7be7bb533e3f8324d4c4dafc44e24e70eebf7b91d7b32cd343c8566a760d31503182a4b68f664233a802af277a460efa25a9aa3b61c71b262f3e1be21ee6eb95203785f909fb5c0dd181cdc0245af00750a3eb6e2614fc04f9273c68dcbdc93fc9cd7fe3a6029c8894df1059fd46ab8ac0f323318191c',
-        '0xd2A0E86773dD9dD12a0Fa2EC336511b39e17008C'
+        provider, // nonce remains the same
+        circleData.message,
+        circleData.attestation,
+        '0xd2A0E86773dD9dD12a0Fa2EC336511b39e17008C', // recipient address remains the same
+        destinationChainId
     );
-    console.log('Transaction result:', result);
+
+    return result;
 }
 
-processRebalance().catch(console.error);
+
+
+const sourceDomainId = CircleTestnet.BASE_SEPOLIA;
+const transactionHash = "0xaf5416459a90ccee63683ef4208e5c77f0496d42f78c1dd42a62120f97bc5da8";
+processRebalanceWithFetch(0, sourceDomainId, transactionHash, 421614).catch(console.error);

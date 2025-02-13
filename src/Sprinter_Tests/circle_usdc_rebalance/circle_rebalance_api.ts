@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ethers } from "ethers";
+//https://developers.circle.com/stablecoins/evm-smart-contracts 
 
 interface CirclePublicKey {
   keyId: string;
@@ -22,6 +23,24 @@ interface MessageDetails {
     amount: string;
   };
   status: string;
+}
+
+interface CircleMessageResponse {
+  messages: Array<{
+    attestation: string;
+    message: string;
+    eventNonce: string;
+  }>;
+}
+
+export enum CircleTestnet {
+    ETHEREUM_SEPOLIA = "0",
+    AVALANCHE_FUJI = "1",
+    OP_SEPOLIA = "2",
+    ARBITRUM_SEPOLIA = "3",
+    BASE_SEPOLIA = "6",
+    POLYGON_POS_AMOY = "7",
+    UNICHAIN_SEPOLIA = "10"
 }
 
 function getMessageHash(rawData: string): string {
@@ -97,33 +116,71 @@ async function runGetAttestation(rawData: string) {
     }
 }
 
-async function runGetMessage(sourceDomainId: string, transactionHash: string) {
+export async function runGetMessage(sourceDomainId: string, transactionHash: string): Promise<{
+    attestation: string | null;
+    message: string | null;
+}> {
     const circleAPI = new CircleAPI();
     
     try {
-        const messageDetails = await circleAPI.getMessage(sourceDomainId, transactionHash);
-        console.log("Message Details:", messageDetails);
+        const response = await circleAPI.getMessage(sourceDomainId, transactionHash);
+        // console.log("Raw API Response:", JSON.stringify(response, null, 2));
+        
+        // Check if we have messages array in the response
+        if ('messages' in response && Array.isArray(response.messages) && response.messages.length > 0) {
+            const latestMessage = response.messages[0];
+            return {
+                attestation: latestMessage.attestation,
+                message: latestMessage.message
+            };
+        } else {
+            console.log("No messages found in response");
+            return { attestation: null, message: null };
+        }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
+            console.error("Full Axios Error:", {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                headers: error.response?.headers,
+                config: {
+                    url: error.config?.url,
+                    method: error.config?.method,
+                }
+            });
+            
             if (error.response?.status === 404) {
-                console.error("Message not found. The transaction hash or domain ID might be incorrect.");
+                console.error(`Message not found. Transaction hash: ${transactionHash}, Domain ID: ${sourceDomainId}`);
             } else {
                 console.error(`Circle API Error (${error.response?.status}):`, error.response?.data || error.message);
             }
         } else if (error instanceof Error) {
-            console.error("Local Error:", error.message);
+            console.error("Local Error:", {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
         } else {
             console.error("Unknown error:", error);
         }
+        return { attestation: null, message: null };
     }
 }
 
-// Example with actual data
-const exampleRawData = "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000f8000000000000000600000000000000000000157c0000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa50000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa5000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c00000000000000000000000000000000036cbd53842c5426634e7929541ec2318f3dcf7e000000000000000000000000b44aeab4843094dd086c26dd6ce284c417436deb00000000000000000000000000000000000000000000000000000000004c4b40000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c0000000000000000";
-// runGetAttestation(exampleRawData);
+// Example usage with more detailed logging
+async function fetchData(exampleSourceDomainId: CircleTestnet, exampleTransactionHash: string) {
+    console.log("Fetching data for:", {
+        sourceDomainId: exampleSourceDomainId,
+        transactionHash: exampleTransactionHash
+    });
+    
+    const result = await runGetMessage(exampleSourceDomainId, exampleTransactionHash);
+    console.log("Circle API Response:", result);
+}
 
-// Example usage
-const exampleSourceDomainId = "6"; // Example domain ID for Avalanche
-const exampleTransactionHash = "0xf2c87f7862411073bbb001c85f1127a3f7b41fa98e67b862e18ec3bc6ed40ae8"; // Replace with your actual transaction hash
-runGetMessage(exampleSourceDomainId, exampleTransactionHash);
+// Run the example
+// const SourceDomainId = CircleTestnet.BASE_SEPOLIA;
+// const TransactionHash = "0xee2fd77981dec456af999f3a3d1b5abe5198db2b42bf454531923658bbad219b";
+// fetchData(SourceDomainId, TransactionHash).catch(console.error);
 
