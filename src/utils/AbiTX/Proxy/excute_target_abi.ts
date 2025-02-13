@@ -68,7 +68,7 @@ export async function executeBorrow({
 }
 
 
-async function main() {
+async function borrow() {
   const borrowParams: BorrowParams = {
     borrowToken: "0x4200000000000000000000000000000000000006",
     amount: "50000000000000000",
@@ -93,4 +93,4 @@ async function main() {
 }
 
 
-main();
+borrow();

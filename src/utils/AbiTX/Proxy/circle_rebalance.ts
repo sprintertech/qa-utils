@@ -97,6 +97,33 @@ async function runGetAttestation(rawData: string) {
     }
 }
 
+async function runGetMessage(sourceDomainId: string, transactionHash: string) {
+    const circleAPI = new CircleAPI();
+    
+    try {
+        const messageDetails = await circleAPI.getMessage(sourceDomainId, transactionHash);
+        console.log("Message Details:", messageDetails);
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 404) {
+                console.error("Message not found. The transaction hash or domain ID might be incorrect.");
+            } else {
+                console.error(`Circle API Error (${error.response?.status}):`, error.response?.data || error.message);
+            }
+        } else if (error instanceof Error) {
+            console.error("Local Error:", error.message);
+        } else {
+            console.error("Unknown error:", error);
+        }
+    }
+}
+
 // Example with actual data
 const exampleRawData = "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000f8000000000000000600000000000000000000157c0000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa50000000000000000000000009f3b8679c73c2fef8b59b4f3444d4e156fb70aa5000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c00000000000000000000000000000000036cbd53842c5426634e7929541ec2318f3dcf7e000000000000000000000000b44aeab4843094dd086c26dd6ce284c417436deb00000000000000000000000000000000000000000000000000000000004c4b40000000000000000000000000d2a0e86773dd9dd12a0fa2ec336511b39e17008c0000000000000000";
-runGetAttestation(exampleRawData);
+// runGetAttestation(exampleRawData);
+
+// Example usage
+const exampleSourceDomainId = "6"; // Example domain ID for Avalanche
+const exampleTransactionHash = "0xf2c87f7862411073bbb001c85f1127a3f7b41fa98e67b862e18ec3bc6ed40ae8"; // Replace with your actual transaction hash
+runGetMessage(exampleSourceDomainId, exampleTransactionHash);
+
