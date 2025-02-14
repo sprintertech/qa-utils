@@ -6,9 +6,9 @@ import { CircleTestnet, runGetMessage } from './circle_rebalance_api';
 dotenv.config();
 
 export const createProcessRebalanceCall = (
-    provider: number,  // This corresponds to the Provider enum
-    message: string,    // First bytes parameter to encode
-    attestation: string     // Second bytes parameter to encode
+    provider: number,  
+    message: string,    
+    attestation: string     
 ) => {
     const encodedData = ethers.utils.defaultAbiCoder.encode(
         ['bytes', 'bytes'],
@@ -100,8 +100,6 @@ async function processRebalanceWithFetch(provider: number = 0, sourceDomainId: C
 
     return result;
 }
-
-
 
 const sourceDomainId = CircleTestnet.BASE_SEPOLIA;
 const transactionHash = "0xaf5416459a90ccee63683ef4208e5c77f0496d42f78c1dd42a62120f97bc5da8";
